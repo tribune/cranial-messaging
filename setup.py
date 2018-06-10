@@ -11,6 +11,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(name='cranial-datastore',
       version='0.2.0',
+      namespace_packages=['cranial'],
       description='Cranial Datastore',
       long_description=long_description,
       author='Tronc Data Team',
