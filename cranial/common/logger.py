@@ -3,7 +3,7 @@ import os
 
 
 class FileHandler(logging.handlers.RotatingFileHandler):
-    def __init__(self, path='/home/', filename='backbone.log'):
+    def __init__(self, path='/home/', filename='cranial.log'):
         if path[-1] != '/':
             path += '/'
 
