@@ -1,0 +1,15 @@
+arrow>=0.10
+boto3>=1.4
+cachetools>=2.0
+confluent-kafka>=0.11
+psycopg2>=2.6
+pytest>=3.2
+python-dateutil>=2.6
+PyYAML>=3.12
+pyzmq>=16.0
+requests>=2.18
+requests-futures>=0.9
+toolz>=0.8
+urllib3>=1.22
+zmq>=0.0.0
+-e git+git@github.com:tribune/cranial-common.git@v0.2.0#egg=cranial-common
