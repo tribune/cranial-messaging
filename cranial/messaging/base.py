@@ -1,48 +1,4 @@
 """
-Messenger is a framework for sending synchronous or
-asynchronous messages between microservices, and automatically supports
-Marathon's REST API for service discovery.
-
-Inspired in no small part by:
-    https://blogs.mulesoft.com/dev/connectivity-dev/why-messaging-queues-suck/
-
-To introduce the terminology:
-    - A 'producer' uses a Messenger object to broadcast a 'message' (string)
-      with a certain 'Label' (a.k.a "topic") to self-registered 'consumers.'
-    - A Messenger uses various Notifiers to deliver the message to each consumer
-      service.
-    - A consumer service specifies (using Marathon Service Labels, or
-      user-specified functions):
-        - the 'Label' of messages it wishes to receive,
-        - whether those messages should go to 'all' tasks for the service, or
-          'any' task (a.k.a instance), and
-        - which type of Notifier to use.
-    - Beside the message itself, a Notifier is provided an 'address' by Service
-    Discovery, and an 'endpoint' by the Messenger.
-
-Notifiers exists for:
-
-========  ==========    ========
-Notifier  Address       Endpoint
-========  ==========    ========
-HTTP      Hostname      URL Path
-Kafka     (ignored)     Topic
-ZMQ       Hostname      (ignored)
-Celery    Broker Host   Channel   <-- Deprecated
-LocalDisk File path     (ignored)
-Firehose  (ignored)     DeliveryStreamName
-
-
-Basic library usage, assuming you have an HTTP server listening for a
-<message> at /key/<message> and it has DCOS labels
-'FOO' = ('any'|'all') and 'NOTIFIER' = 'http':
-
-    from cranial.messaging import Messenger
-    Messenger(label='FOO').notify(string)
-
-It will raise an Exception if any messages fail. You can do
-fancier things by implementing your own child of class Messenger.
-
 @TODO CLI testing w docopt, e.g.: Usage: messenger.py [--local] [TYPE] [PORT]
 """
 
@@ -99,7 +55,7 @@ class HTTP_Notifier(Notifier):
 
 
 class MockKafkaProducer:
-    queue = [] # type: List
+    queue = []  # type: List
 
     def produce(self, endpoint, message):
         self.queue.append('{}: {}'.format(endpoint, message))
@@ -114,11 +70,11 @@ reusable_producer_instance = None
 
 
 def get_reusable_kafka_producer(hosts_csv):
-        global reusable_producer_instance
-        from cranial.messaging.adapters import kafka as kafka_client
-        if not reusable_producer_instance:
-            reusable_producer_instance = kafka_client.get_producer(hosts_csv)
-        return reusable_producer_instance
+    global reusable_producer_instance
+    from cranial.messaging.adapters import kafka as kafka_client
+    if not reusable_producer_instance:
+        reusable_producer_instance = kafka_client.get_producer(hosts_csv)
+    return reusable_producer_instance
 
 
 class KAFKA_Notifier(Notifier):
