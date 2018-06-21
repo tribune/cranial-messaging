@@ -96,3 +96,9 @@ Roadmap
   Messenger can send to multiple endpoints.
 
 - Relocate Notifiers in their own files.
+
+- Refactor Service Discovery for better abstraction to other solutions.
+
+- Implement a static config ServiceDiscovery class.
+
+- Finishing re-factoring `notify()` as demonstrated in `new_notify()`.
