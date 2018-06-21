@@ -15,24 +15,25 @@ To introduce the terminology:
       service.
     - A consumer service specifies (using Marathon Service Labels, or
       user-specified functions):
-        - the 'Label' of messages it wishes to receive,
-        - whether those messages should go to 'all' tasks for the service, or
-          'any' task (a.k.a instance), and
-        - which type of Notifier to use.
-    - Beside the message itself, a Notifier is provided an 'address' by Service
-    Discovery, and an 'endpoint' by the Messenger.
+      - the 'Label' of messages it wishes to receive,
+      - whether those messages should go to 'all' tasks for the service, or
+      'any' task (a.k.a instance), and
+      - which type of Notifier to use.
+    - Beside the message itself, a Notifier is provided an 'address' by
+      ServiceDiscovery, and an 'endpoint' by the Messenger.
 
 Notifiers exists for:
 
-========  ==========    ========
-Notifier  Address       Endpoint
-========  ==========    ========
-HTTP      Hostname      URL Path
-Kafka     (ignored)     Topic
-ZMQ       Hostname      (ignored)
-Celery    Broker Host   Channel   <-- Deprecated
-LocalDisk File path     (ignored)
-Firehose  (ignored)     DeliveryStreamName
+=========   ===========   ==================   ==========
+Notifier    Address       Endpoint             Note
+=========   ===========   ==================   ==========
+HTTP        Hostname      URL Path
+Kafka       (ignored)     Topic
+ZMQ         Hostname      (ignored)
+Celery      Broker Host   Channel              Deprecated
+LocalDisk   File path     (ignored)
+Firehose    (ignored)     DeliveryStreamName
+=========   ===========   ==================   ==========
 
 
 Basic library usage, assuming you have an HTTP server listening for a
@@ -93,3 +94,5 @@ Roadmap
 
 - Make 'endpoint' and argument to `notify()` instead of `__init__` so the same
   Messenger can send to multiple endpoints.
+
+- Relocate Notifiers in their own files.
