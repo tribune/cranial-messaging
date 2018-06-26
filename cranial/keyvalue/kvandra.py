@@ -9,7 +9,7 @@ from cassandra.policies import TokenAwarePolicy, RoundRobinPolicy
 from cassandra.query import named_tuple_factory
 from cassandra.auth import PlainTextAuthProvider
 
-from cranial.adapters.cassandra import CassandraAdapter as Adapter
+from cranial.datastore.adapters.cassandra import CassandraAdapter as Adapter
 from cranial.keyvalue.keyvalue import KeyValueDB as KeyValue
 from cranial.common import logger
 
