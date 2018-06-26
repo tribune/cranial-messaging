@@ -106,7 +106,7 @@ def key_download_decompress(bucket, key, force_decompress=False):
     """
     fp = tempfile.mkstemp(suffix='.gz')[1]
     boto3.resource('s3').Bucket(bucket).download_file(key, fp)
-    log.info("downloaded {} to {}".format(k, fp))
+    log.info("downloaded {}/{} to {}".format(bucket, key, fp))
     if key.endswith('.gz') or force_decompress:
         # @TODO Replace with gzip module.
         p = subprocess.run(['gunzip', fp, '-f'], stderr=subprocess.PIPE)
