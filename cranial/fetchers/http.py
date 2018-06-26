@@ -4,7 +4,7 @@ except:
     import connector
 
 from requests_futures.sessions import FuturesSession
-import io
+
 
 class Connector(connector.Connector):
     r"""Connector for getting data via HTTP. Upload not yet implemented.

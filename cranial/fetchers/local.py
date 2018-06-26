@@ -1,8 +1,5 @@
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-import glob
 import io
-import json
 import os
 from tempfile import mkstemp
 
@@ -12,6 +9,32 @@ from cranial.common import logger
 log = logger.get(name='local_fetchers')  # streaming log
 
 
+def file_readlines(fp, delete_after=False):
+    """
+    memory efficient iterator to read lines from a file (readlines() method reads whole file)
+    Parameters
+    ----------
+    fp
+        path to a decompressed file downloaded from s3 key
+    delete_after
+        delete file after it was read
+    Returns
+    -------
+        generator of lines
+    """
+    with open(fp) as f:
+        while True:
+            line = f.readline()
+            if line:
+                yield line
+            else:
+                break
+
+    if delete_after:
+        try:
+            os.unlink(fp)
+        except Exception as e:
+            log.warning(e)
 
 
 class Connector(connector.Connector):

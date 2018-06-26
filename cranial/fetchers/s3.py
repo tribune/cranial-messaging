@@ -1,13 +1,9 @@
-import glob
 import io
-import json
 import logging
 import os
-import re
 import shutil
 import subprocess
 import tempfile
-from threading import Thread
 
 import boto3
 
