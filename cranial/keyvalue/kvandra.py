@@ -11,7 +11,7 @@ from cassandra.auth import PlainTextAuthProvider
 
 from cranial.adapters.cassandra import CassandraAdapter as Adapter
 from cranial.keyvalue.keyvalue import KeyValueDB as KeyValue
-from cranial import logger
+from cranial.common import logger
 
 log = logger.get()
 session = None

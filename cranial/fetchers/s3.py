@@ -12,7 +12,7 @@ from threading import Thread
 import boto3
 
 from cranial.fetchers import connector
-from cranial import logger
+from cranial.common import logger
 
 log = logger.get('S3_LOGLEVEL', name='s3_fetchers')
 

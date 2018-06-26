@@ -6,7 +6,7 @@ from google.cloud.storage import Client, Blob
 from google.oauth2 import service_account
 
 from cranial.fetchers import connector
-from cranial import logger
+from cranial.common import logger
 
 log = logger.get('GOOGLECLOUDSTORAGE_LOGLEVEL', name='gcs_connector')
 

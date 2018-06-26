@@ -7,7 +7,7 @@ from typing import Dict, List, Optional  # noqa
 import psycopg2
 from psycopg2.extensions import POLL_OK, POLL_READ, POLL_WRITE
 
-from cranial import logger
+from cranial.common import logger
 
 log = logger.get()
 

@@ -7,7 +7,7 @@ import os
 from tempfile import mkstemp
 
 from cranial.fetchers import connector
-from cranial import logger
+from cranial.common import logger
 
 log = logger.get(name='local_fetchers')  # streaming log
 

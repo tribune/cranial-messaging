@@ -1,5 +1,5 @@
 from cassandra.encoder import Encoder
-from cranial import logger
+from cranial.common import logger
 
 log = logger.get()
 
