@@ -102,7 +102,7 @@ def key_download_decompress(bucket, key, force_decompress=False):
         - decompress on disk
     Returns
     -------
-        name of the decompressed temp file
+        name of the decompressed temp file or None if failed
     """
     fp = tempfile.mkstemp(suffix='.gz')[1]
     boto3.resource('s3').Bucket(bucket).download_file(key, fp)
@@ -117,8 +117,6 @@ def key_download_decompress(bucket, key, force_decompress=False):
         else:
             log.warning(p.stderr)
             return None
-    else:
-        return fp
 
 
 class S3Connector(connector.Connector):
