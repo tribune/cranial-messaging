@@ -23,11 +23,11 @@ class Listener(base.Listener):
         self.address = address
         return msg
 
-    def respond(self, data: bytes):
+    def resp(self, data: bytes):
         self.server.send_multipart([
             self.address,
             b'',
             data
         ])
-        super().respond(None)
+        super().resp(None)
         return True
