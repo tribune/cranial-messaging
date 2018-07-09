@@ -77,7 +77,7 @@ def prepare_s3_prefix(bucket, pre_date_part, y=None, mo=None, d=None, h=None, af
     return s
 
 
-def read_key(key, bucket='bi-data-warehouse', verbose=False):
+def read_key(key, bucket='bi-data-warehouse', decode=True, verbose=False):
     """
     The intended use is within a map function, so to change bucket and verbosity is not extremely simple and needs
     some functools (partial?)
@@ -88,7 +88,8 @@ def read_key(key, bucket='bi-data-warehouse', verbose=False):
     """
     if verbose:
         log.info('reading {}'.format(key))
-    return boto3.resource('s3').Bucket(bucket).Object(key).get()['Body'].read().decode()
+    b_str = boto3.resource('s3').Bucket(bucket).Object(key).get()['Body'].read()
+    return b_str.decode() if decode else b_str
 
 
 def key_download_decompress(bucket, key, force_decompress=False):
