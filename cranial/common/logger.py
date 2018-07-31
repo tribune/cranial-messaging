@@ -11,7 +11,7 @@ class FileHandler(logging.handlers.RotatingFileHandler):
                                                       path + filename,
                                                       maxBytes=5242880,
                                                       backupCount=10)
-        fmt = '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
+        fmt = '%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s'
         fmt_date = '%Y-%m-%dT%T%Z'
         formatter = logging.Formatter(fmt, fmt_date)
 
@@ -21,7 +21,7 @@ class FileHandler(logging.handlers.RotatingFileHandler):
 class StreamingHandler(logging.StreamHandler):
     def __init__(self):
         logging.StreamHandler.__init__(self)
-        fmt = '%(asctime)s - %(filename)s - %(levelname)s - %(message)s'
+        fmt = '%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s'
         fmt_date = '%Y-%m-%dT%T%Z'
         formatter = logging.Formatter(fmt, fmt_date)
 
