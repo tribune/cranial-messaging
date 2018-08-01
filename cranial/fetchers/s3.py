@@ -88,7 +88,11 @@ def read_key(key, bucket, decode=True, verbose=False):
     """
     if verbose:
         log.info('reading {}'.format(key))
-    b_str = boto3.resource('s3').Bucket(bucket).Object(key).get()['Body'].read()
+    try:
+        b_str = boto3.resource('s3').Bucket(bucket).Object(key).get()['Body'].read()
+    except Exception as e:
+        log.error("{}:{}\t{}".format(bucket, key, e))
+        return None
     return b_str.decode() if decode else b_str
 
 
