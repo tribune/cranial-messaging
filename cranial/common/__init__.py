@@ -1,1 +1,1 @@
-from .common import *
+from cranial.common import *
