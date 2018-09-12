@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "cranial-common"
+version = "0.2.0"
+description = "Low-level utilities shared by various Cranial packages."
+authors = ["Matt Chapman, et al. <Matt@NinjitsuWeb.com>"]
+license = "GPL-3.0+"
+repository = "https://github.com/tribune/cranial-common"
+packages = [
+    { include = "cranial" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.5"
+
+[tool.poetry.dev-dependencies]
