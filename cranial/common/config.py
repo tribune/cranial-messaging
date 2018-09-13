@@ -1,3 +1,18 @@
+"""
+This model exists to support the 12-factor App approach to configuration.
+
+We assume, but do not enforce, the use of the `docopt` module to handle
+configuration via command-line arguments. Any dict[str, str] of config values
+will do.
+
+Typical usage:
+    - Read command-line args first, e.g., `opts = docopt.docopt(__doc__)`
+    - Read and store environment variables, over-writing with CLI args with
+      `config.load(opts, 'some_env_var_prefix')`.
+    - Throught the application, use `config.get()` to get a dict of
+      configuration values.
+"""
+
 from collections import OrderedDict
 import os
 from typing import Any, Dict, Optional, Tuple  # noqa
