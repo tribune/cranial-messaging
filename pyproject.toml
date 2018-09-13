@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "cranial-messaging"
+version = "0.2.0"
+description = "Abstractions for high-level communication between micro-services."
+authors = ["Matt Chapman et al. <Matt@NinjitsuWeb.com>"]
+license = "GPL-3.0+"
+repository = "https://github.com/tribune/cranial-messaging"
+packages = [
+    { include = "cranial" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.5"
+boto3 = "^1.9"
+cranial-common = "^0.2.0"
+cachetools = "^2.1"
+psycopg2 = "^2.6.2"
+requests-futures = "^0.9.7"
+zmq = "^0.0.0"
+
+
+
+[tool.poetry.dev-dependencies]
