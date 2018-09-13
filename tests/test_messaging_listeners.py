@@ -27,5 +27,5 @@ class TestMessaging(TestCase):
         msg = 'Hello Test.'
         success = messenger.notify(msg)
         self.assertEqual(bytes(msg, 'ascii'), listener.recv())
-        listener.respond(b'OK')
+        listener.resp(b'OK')
         self.assertTrue(success)
