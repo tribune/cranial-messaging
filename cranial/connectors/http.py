@@ -1,12 +1,9 @@
-try:
-    from . import connector
-except:
-    import connector
-
 from requests_futures.sessions import FuturesSession
 
+from cranial.connectors import base
 
-class Connector(connector.Connector):
+
+class Connector(base.Connector):
     r"""Connector for getting data via HTTP. Upload not yet implemented.
 
     >>> stream = Connector().get('http://httpbin.org/html')
@@ -17,8 +14,7 @@ class Connector(connector.Connector):
     b'\x89PNG\r\n'
     """
 
-
-    def __init__(self, host:str=None):
+    def __init__(self, host: str = None):
         self.session = FuturesSession()
         # Ensure host ends in '/' if given.
         self.url_host = host if host is None or host.endswith('/') else host+'/'
