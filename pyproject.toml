@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "cranial-datastore"
+version = "0.2.0"
+description = "Data storage connectivity & utilities for Cranial."
+authors = ["Matt Chapman et al. <Matt@NinjitsuWeb.com>"]
+license = "GPL-3.0+"
+repository = "https://github.com/tribune/cranial-datastore"
+packages = [
+    { include = "cranial" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.5"
+boto3 = "^1.9"
+cranial-common = "^0.2.0"
+cachetools = "^2.1"
+
+[tool.poetry.dev-dependencies]
