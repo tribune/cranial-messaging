@@ -5,13 +5,13 @@ import os
 from google.cloud.storage import Client, Blob
 from google.oauth2 import service_account
 
-from cranial.fetchers import connector
+from cranial.connectors import base
 from cranial.common import logger
 
 log = logger.get('GOOGLECLOUDSTORAGE_LOGLEVEL', name='gcs_connector')
 
 
-class InMemoryConnector(connector.Connector):
+class InMemoryConnector(base.Connector):
     def __init__(self, bucket, prefix='', binary=True, do_read=False,
                  credentials=None, project=None):
         super().__init__(base_address=prefix, binary=binary, do_read=do_read)

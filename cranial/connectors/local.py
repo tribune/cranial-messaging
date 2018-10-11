@@ -3,7 +3,7 @@ import io
 import os
 from tempfile import mkstemp
 
-from cranial.fetchers import connector
+from cranial.connectors import base
 from cranial.common import logger
 
 log = logger.get(name='local_fetchers')  # streaming log
@@ -37,10 +37,10 @@ def file_readlines(fp, delete_after=False):
             log.warning(e)
 
 
-class Connector(connector.Connector):
+class Connector(base.Connector):
     def __init__(self, path: str = '', binary=True, do_read=False) -> None:
         super().__init__(base_address=path, binary=binary, do_read=do_read)
-        self._open_files = []
+        self._open_files = []  # type: List[FileHandle]
 
     def get(self, name=None):
         if name.startswith('/'):

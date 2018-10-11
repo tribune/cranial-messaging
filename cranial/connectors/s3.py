@@ -4,10 +4,11 @@ import os
 import shutil
 import subprocess
 import tempfile
+from typing import Dict
 
 import boto3
 
-from cranial.fetchers import connector
+from cranial.connectors import base
 from cranial.common import logger
 
 log = logger.get('S3_LOGLEVEL', name='s3_fetchers')
@@ -120,11 +121,13 @@ def key_download_decompress(bucket, key, force_decompress=False):
             return None
 
 
-class S3Connector(connector.Connector):
-    def __init__(self, bucket: str, prefix=''):
+class S3Connector(base.Connector):
+    def __init__(self, bucket: str, prefix='') -> None:
         self.bucket = bucket
         self.prefix = prefix
-        self.cache = {}
+        self.cache = {}  # type: Dict[str, str]
+        log.info('s3.S3Connector downloads whole files to local disk '
+                 + 'before use. Consider s3.InMemoryConnector instead.')
 
     def get(self, s3_path, binary=False, redownload=False):
         if not redownload:
@@ -139,14 +142,16 @@ class S3Connector(connector.Connector):
         return open(local_path, 'r' + 'b' if binary else '')
 
     def put(self, source, name=None):
+        fname = name if name else source.split('/')[-1]
+        bucket = boto3.resource('s3').Bucket(self.bucket)
         if type(source) is str:
-            fname = name if name else source.split('/')[-1]
-            boto3.resource('s3').Bucket(bucket).upload_file(self.prefix + fname, source)
+            bucket.upload_file(
+                    self.prefix + fname, source)
             return True
 
         elif type(source) is io.BytesIO:
-            fname = name if name else local_path.split('/')[-1]
-            boto3.resource('s3').Bucket(bucket).upload_fileobj(self.prefix + fname, source)
+            bucket.upload_fileobj(
+                    self.prefix + fname, source)
             return True
 
         else:
@@ -154,7 +159,7 @@ class S3Connector(connector.Connector):
                 "Can't put source data type {}. Pass BytesIO or string path to a local file.".format(type(source)))
 
 
-class InMemoryConnector(connector.Connector):
+class InMemoryConnector(base.Connector):
     def __init__(self, bucket, prefix='', binary=True, do_read=False,
                  credentials={}):
         super(InMemoryConnector, self).__init__(base_address=prefix, binary=binary, do_read=do_read)

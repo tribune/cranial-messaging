@@ -4,6 +4,8 @@ from tempfile import mkstemp
 from concurrent import futures
 from concurrent.futures import Future, ThreadPoolExecutor
 
+from cranial.parsers import line
+
 
 class Connector():
     def __init__(self, base_address='', binary=True, do_read=False):
@@ -11,9 +13,37 @@ class Connector():
         self.binary = binary
         self.do_read = do_read
 
-    def iterator(self, d: dict) -> iter:
+    def iterator(self, target: Any) -> iter:
         """Get one or more IOstreams and iterate over them yielding lines."""
-        raise Exception("Not Implemented.")
+        if type(target) == list:
+            return self.generate_from_list(target)
+        else:
+            f = self.getFuture(target)
+            return self.generate(f)
+
+    def generate(self, future_item):
+        for l in line.Parser(f.result()):
+            yield l
+
+    def generate_from_list(self, l: List):
+        # @ToDo
+        #getMultiple on all items, start returning whatever item arrives first.
+        done = set()
+        while len(done) < len(d):
+            for key in d:
+                if not (key in done):
+                    try:
+                        data = response[key].result(1)
+                        for l in line.Parser(data):
+                            yield l
+                        done.add(key)
+                    except futures.TimeoutError:
+                        pass
+                    except futures.CancelledError:
+                        response[key] = False
+                        done.add(key)
+        return response
+
 
     def toStream(self, data):
         if type(data) is str:
@@ -42,16 +72,16 @@ class Connector():
             self.pool = ThreadPoolExecutor()
         return self.pool
 
-    def doFuture(self, fn: callable, *args, **kwargs) -> Future:
+    def _doFuture(self, fn: callable, *args, **kwargs) -> Future:
         return self.executor().submit(fn, *args, **kwargs)
 
     def getFuture(self, *args, **kwargs) -> Future:
-        return self.doFuture(self.get, *args, **kwargs)
+        return self._doFuture(self.get, *args, **kwargs)
 
     def putFuture(self, *args, **kwargs) -> Future:
-        return self.doFuture(self.put, *args, **kwargs)
+        return self._doFuture(self.put, *args, **kwargs)
 
-    def doMultiple(self, fn: callable, d: dict, blocking=True, **kwargs):
+    def _doMultiple(self, fn: callable, d: dict, blocking=True, **kwargs):
         """Takes a dict of keys to argument to pass to fn.
 
         Returns dict of Futures if 'blocking' is set False. Otherwise IOStreams.
@@ -64,7 +94,7 @@ class Connector():
                 args = [args]
             response[key] = fn(*args, **kwargs)
 
-        if not (blocking):
+        if not blocking:
             return response
 
         done = set()
@@ -83,10 +113,10 @@ class Connector():
         return response
 
     def getMultiple(self, d: dict, blocking=True, **kwargs):
-        return self.doMultiple(self.getFuture, d, blocking, **kwargs)
+        return self._doMultiple(self.getFuture, d, blocking, **kwargs)
 
     def putMultiple(self, d: dict, blocking=True, **kwargs):
-        return self.doMultiple(self.putFuture, d, blocking, **kwargs)
+        return self._doMultiple(self.putFuture, d, blocking, **kwargs)
 
     def __str__(self):
         ss = [str(self.__class__).split("'")[1]]
