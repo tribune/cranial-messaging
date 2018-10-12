@@ -58,7 +58,7 @@ the Messenger object is to abstract away these details from the concerns of the
 developer of an application that produces data that may be of interest to other
 applications.
 
-A Messenger published data on with one "Label" to potentially many "Endpoints."
+A Messenger publishes data with one "Label" to potentially many "Endpoints."
 That is, a consumer of Messenger data can subscribe to a Label, and should
 implement endpoints for each of the types of messages the Label might contain.
 Thus the consumer needs to understand the internals of the producer to some
