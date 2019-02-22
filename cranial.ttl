@@ -1,4 +1,4 @@
-@prefix : <http://webprotege.stanford.edu/project/7TZ4sBBkXpZ8siBlY65vWg#> .
+@prefix : <http://ld.chapmanmedia.com/cranial#> .
 @prefix dbr: <http://dbpedia.org/resource/> .
 @prefix owl: <https://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -6,70 +6,70 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix cogs: <http://vocab.deri.ie/cogs#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@base <http://webprotege.stanford.edu/project/7TZ4sBBkXpZ8siBlY65vWg> .
+@base <http://ld.chapmanmedia.com/cranial> .
 
-<http://webprotege.stanford.edu/project/7TZ4sBBkXpZ8siBlY65vWg> rdf:type owl:Ontology .
+<http://ld.chapmanmedia.com/cranial> rdf:type owl:Ontology .
 
 #################################################################
 #    Object Properties
 #################################################################
 
-###  http://ld.chapmanmedia.com/cranial#mayContain
-<http://ld.chapmanmedia.com/cranial#mayContain> rdf:type owl:ObjectProperty .
+###  #mayContain
+<#mayContain> rdf:type owl:ObjectProperty .
 
 
-###  http://ld.chapmanmedia.com/cranial#mayContainOne
-<http://ld.chapmanmedia.com/cranial#mayContainOne> rdf:type owl:ObjectProperty ;
+###  #mayContainOne
+<#mayContainOne> rdf:type owl:ObjectProperty ;
                                                    rdfs:label "May Contain One"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#mayContainOneOrMore
-<http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> rdf:type owl:ObjectProperty ;
+###  #mayContainOneOrMore
+<#mayContainOneOrMore> rdf:type owl:ObjectProperty ;
                                                          rdfs:label "May Contain One Or More"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#mustContain
-<http://ld.chapmanmedia.com/cranial#mustContain> rdf:type owl:ObjectProperty .
+###  #mustContain
+<#mustContain> rdf:type owl:ObjectProperty .
 
 
-###  http://ld.chapmanmedia.com/cranial#mustContainOne
-<http://ld.chapmanmedia.com/cranial#mustContainOne> rdf:type owl:ObjectProperty ;
+###  #mustContainOne
+<#mustContainOne> rdf:type owl:ObjectProperty ;
                                                     rdfs:label "mustContainOne"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#mustContainOneOrMore
-<http://ld.chapmanmedia.com/cranial#mustContainOneOrMore> rdf:type owl:ObjectProperty ;
+###  #mustContainOneOrMore
+<#mustContainOneOrMore> rdf:type owl:ObjectProperty ;
                                                           rdfs:label "mustContainOneOrMore"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#returnsOutput
-<http://ld.chapmanmedia.com/cranial#returnsOutput> rdf:type owl:ObjectProperty ;
-                                                   rdfs:domain <http://ld.chapmanmedia.com/cranial#CranialObject> ;
-                                                   rdfs:range <http://ld.chapmanmedia.com/cranial#CranialObject> ;
+###  #returnsOutput
+<#returnsOutput> rdf:type owl:ObjectProperty ;
+                                                   rdfs:domain <#CranialObject> ;
+                                                   rdfs:range <#CranialObject> ;
                                                    rdfs:label "returnsOutput"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#takesInput
-<http://ld.chapmanmedia.com/cranial#takesInput> rdf:type owl:ObjectProperty ;
-                                                rdfs:domain <http://ld.chapmanmedia.com/cranial#CranialObject> ;
-                                                rdfs:range <http://ld.chapmanmedia.com/cranial#CranialObject> ;
+###  #takesInput
+<#takesInput> rdf:type owl:ObjectProperty ;
+                                                rdfs:domain <#CranialObject> ;
+                                                rdfs:range <#CranialObject> ;
                                                 rdfs:label "takesInput"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#takesOptionalInput
-<http://ld.chapmanmedia.com/cranial#takesOptionalInput> rdf:type owl:ObjectProperty ;
+###  #takesOptionalInput
+<#takesOptionalInput> rdf:type owl:ObjectProperty ;
                                                         rdfs:subPropertyOf owl:topObjectProperty ;
                                                         rdfs:label "takesOptionalInput"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#usesOne
-<http://ld.chapmanmedia.com/cranial#usesOne> rdf:type owl:ObjectProperty ;
+###  #usesOne
+<#usesOne> rdf:type owl:ObjectProperty ;
                                              rdfs:subPropertyOf owl:topObjectProperty ;
                                              rdfs:label "usesOne"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#usesOneOrMore
-<http://ld.chapmanmedia.com/cranial#usesOneOrMore> rdf:type owl:ObjectProperty ;
+###  #usesOneOrMore
+<#usesOneOrMore> rdf:type owl:ObjectProperty ;
                                                    rdfs:subPropertyOf owl:topObjectProperty ;
                                                    rdfs:label "usesOneOrMore"@en-us .
 
@@ -123,528 +123,529 @@ dbr:Tuple rdf:type owl:Class ;
                                                        rdfs:label "Set_(abstract_data_type)"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Accumulator
-<http://ld.chapmanmedia.com/cranial#Accumulator> rdf:type owl:Class ;
-                                                 rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Accumulator
+<#Accumulator> rdf:type owl:Class ;
+                                                 rdfs:subClassOf <#CranialObject> ,
                                                                  [ rdf:type owl:Restriction ;
-                                                                   owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                   owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                                   owl:onProperty <#takesInput> ;
+                                                                   owl:someValuesFrom <#Record>
                                                                  ] ;
                                                  rdfs:label "Accumulator"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Connector
-<http://ld.chapmanmedia.com/cranial#Connector> rdf:type owl:Class ;
-                                               rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Connector
+<#Connector> rdf:type owl:Class ;
+                                               rdfs:subClassOf <#CranialObject> ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOne> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#getMethod>
+                                                                 owl:onProperty <#mayContainOne> ;
+                                                                 owl:someValuesFrom <#getMethod>
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOne> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#putMethod>
+                                                                 owl:onProperty <#mayContainOne> ;
+                                                                 owl:someValuesFrom <#putMethod>
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
+                                                                 owl:onProperty <#takesOptionalInput> ;
                                                                  owl:someValuesFrom dbr:Identifier
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#usesOne> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Protocol>
+                                                                 owl:onProperty <#usesOne> ;
+                                                                 owl:someValuesFrom <#Protocol>
                                                                ] ;
                                                rdfs:label "Connector"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#CranialObject
-<http://ld.chapmanmedia.com/cranial#CranialObject> rdf:type owl:Class ;
+###  #CranialObject
+<#CranialObject> rdf:type owl:Class ;
                                                    rdfs:subClassOf <http://dbpedia.org/resource/Object_(computer_science)> ;
                                                    rdfs:label "CranialObject"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Deserializer
-<http://ld.chapmanmedia.com/cranial#Deserializer> rdf:type owl:Class ;
+###  #Deserializer
+<#Deserializer> rdf:type owl:Class ;
                                                   rdfs:subClassOf cogs:Transformation ,
                                                                   [ rdf:type owl:Restriction ;
-                                                                    owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                                    owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Deserializer>
+                                                                    owl:onProperty <#returnsOutput> ;
+                                                                    owl:someValuesFrom <#Deserializer>
                                                                   ] ,
                                                                   [ rdf:type owl:Restriction ;
-                                                                    owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                    owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerializedRecord>
+                                                                    owl:onProperty <#takesInput> ;
+                                                                    owl:someValuesFrom <#SerializedRecord>
                                                                   ] ;
                                                   rdfs:label "Deserializer"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Fetcher
-<http://ld.chapmanmedia.com/cranial#Fetcher> rdf:type owl:Class ;
-                                             rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Fetcher
+<#Fetcher> rdf:type owl:Class ;
+                                             rdfs:subClassOf <#CranialObject> ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Connector>
+                                                               owl:onProperty <#mustContainOne> ;
+                                                               owl:someValuesFrom <#Connector>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerDe>
+                                                               owl:onProperty <#mustContainOne> ;
+                                                               owl:someValuesFrom <#SerDe>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#RecordSet>
+                                                               owl:onProperty <#returnsOutput> ;
+                                                               owl:someValuesFrom <#RecordSet>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
+                                                               owl:onProperty <#takesOptionalInput> ;
                                                                owl:someValuesFrom dbr:Identifier
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
+                                                               owl:onProperty <#takesOptionalInput> ;
                                                                owl:someValuesFrom cogs:Filter
                                                              ] ;
                                              rdfs:comment "Actively retrieves a set of Records."^^xsd:string ;
                                              rdfs:label "Fetcher"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Label
-<http://ld.chapmanmedia.com/cranial#Label> rdf:type owl:Class ;
+###  #Label
+<#Label> rdf:type owl:Class ;
                                            rdfs:subClassOf dbr:Identifier ;
                                            rdfs:label "Topic Label"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Listener
-<http://ld.chapmanmedia.com/cranial#Listener> rdf:type owl:Class ;
-                                              rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Listener
+<#Listener> rdf:type owl:Class ;
+                                              rdfs:subClassOf <#CranialObject> ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerDe>
+                                                                owl:onProperty <#mustContainOne> ;
+                                                                owl:someValuesFrom <#SerDe>
                                                               ] ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                                owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                                owl:onProperty <#returnsOutput> ;
+                                                                owl:someValuesFrom <#Record>
                                                               ] ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
+                                                                owl:onProperty <#takesInput> ;
                                                                 owl:someValuesFrom dbr:Byte_String
                                                               ] ;
                                               rdfs:comment "Passively waits for Records to be handled."^^xsd:string ;
                                               rdfs:label "Listener"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#LocalTrainer
-<http://ld.chapmanmedia.com/cranial#LocalTrainer> rdf:type owl:Class ;
-                                                  rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#Trainer> ;
+###  #LocalTrainer
+<#LocalTrainer> rdf:type owl:Class ;
+                                                  rdfs:subClassOf <#Trainer> ;
                                                   rdfs:label "LocalTrainer"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Messenger
-<http://ld.chapmanmedia.com/cranial#Messenger> rdf:type owl:Class ;
-                                               rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Messenger
+<#Messenger> rdf:type owl:Class ;
+                                               rdfs:subClassOf <#CranialObject> ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Label>
+                                                                 owl:onProperty <#takesInput> ;
+                                                                 owl:someValuesFrom <#Label>
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                                 owl:onProperty <#takesInput> ;
+                                                                 owl:someValuesFrom <#Record>
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#usesOne> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceDiscovery>
+                                                                 owl:onProperty <#usesOne> ;
+                                                                 owl:someValuesFrom <#ServiceDiscovery>
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#usesOneOrMore> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Notifier>
+                                                                 owl:onProperty <#usesOneOrMore> ;
+                                                                 owl:someValuesFrom <#Notifier>
                                                                ] ;
                                                rdfs:comment "Uses Service Discovery to deliver Records to dynamically subscribed Services. Services register which Labels they are interested in, and which Notifiers they understand."^^xsd:string ;
                                                rdfs:label "Messenger"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Model
-<http://ld.chapmanmedia.com/cranial#Model> rdf:type owl:Class ;
-                                           rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
-                                                           <http://ld.chapmanmedia.com/cranial#Step> ,
+###  #Model
+<#Model> rdf:type owl:Class ;
+                                           rdfs:subClassOf <#CranialObject> ,
+                                                           <#Step> ,
                                                            cogs:Transformation ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                             owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#State>
+                                                             owl:onProperty <#mayContainOneOrMore> ;
+                                                             owl:someValuesFrom <#State>
                                                            ] ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOneOrMore> ;
-                                                             owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Step>
+                                                             owl:onProperty <#mustContainOneOrMore> ;
+                                                             owl:someValuesFrom <#Step>
                                                            ] ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                             owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                             owl:onProperty <#returnsOutput> ;
+                                                             owl:someValuesFrom <#Record>
                                                            ] ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                             owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                             owl:onProperty <#takesInput> ;
+                                                             owl:someValuesFrom <#Record>
                                                            ] ;
                                            rdfs:comment "Executes an ordered sequence of Steps to enhance or modify a Record, or return a completely different Record."@en-us ;
                                            rdfs:label "Cranial Model"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Notifier
-<http://ld.chapmanmedia.com/cranial#Notifier> rdf:type owl:Class ;
-                                              rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Notifier
+<#Notifier> rdf:type owl:Class ;
+                                              rdfs:subClassOf <#CranialObject> ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom <#Record>
                                                               ] ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceEndpoint>
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom <#ServiceEndpoint>
                                                               ] ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceIdentifier>
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom <#ServiceIdentifier>
                                                               ] ,
                                                               [ rdf:type owl:Restriction ;
-                                                                owl:onProperty <http://ld.chapmanmedia.com/cranial#usesOne> ;
-                                                                owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Connector>
+                                                                owl:onProperty <#usesOne> ;
+                                                                owl:someValuesFrom <#Connector>
                                                               ] ;
                                               rdfs:label "Notifier"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#NotifierID
-<http://ld.chapmanmedia.com/cranial#NotifierID> rdf:type owl:Class ;
+###  #NotifierID
+<#NotifierID> rdf:type owl:Class ;
                                                 rdfs:subClassOf dbr:Identifier ;
                                                 rdfs:label "NotifierID"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#NotifierSet
-<http://ld.chapmanmedia.com/cranial#NotifierSet> rdf:type owl:Class ;
+###  #NotifierSet
+<#NotifierSet> rdf:type owl:Class ;
                                                  rdfs:subClassOf <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
                                                                  [ rdf:type owl:Restriction ;
-                                                                   owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                                   owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#NotifierID>
+                                                                   owl:onProperty <#mayContainOneOrMore> ;
+                                                                   owl:someValuesFrom <#NotifierID>
                                                                  ] ;
                                                  rdfs:label "NotifierSet"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Protocol
-<http://ld.chapmanmedia.com/cranial#Protocol> rdf:type owl:Class ;
+###  #Protocol
+<#Protocol> rdf:type owl:Class ;
                                               rdfs:label "Protocol"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Putter
-<http://ld.chapmanmedia.com/cranial#Putter> rdf:type owl:Class ;
-                                            rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Putter
+<#Putter> rdf:type owl:Class ;
+                                            rdfs:subClassOf <#CranialObject> ,
                                                             [ rdf:type owl:Restriction ;
-                                                              owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContain> ;
-                                                              owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Connector>
+                                                              owl:onProperty <#mustContain> ;
+                                                              owl:someValuesFrom <#Connector>
                                                             ] ,
                                                             [ rdf:type owl:Restriction ;
-                                                              owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                              owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerDe>
+                                                              owl:onProperty <#mustContainOne> ;
+                                                              owl:someValuesFrom <#SerDe>
                                                             ] ,
                                                             [ rdf:type owl:Restriction ;
-                                                              owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                              owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#RecordSet>
+                                                              owl:onProperty <#takesInput> ;
+                                                              owl:someValuesFrom <#RecordSet>
                                                             ] ,
                                                             [ rdf:type owl:Restriction ;
-                                                              owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
+                                                              owl:onProperty <#takesOptionalInput> ;
                                                               owl:someValuesFrom dbr:Identifier
                                                             ] ;
                                             rdfs:comment "Writes a set of records to an external location."^^xsd:string ;
                                             rdfs:label "Putter"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Record
-<http://ld.chapmanmedia.com/cranial#Record> rdf:type owl:Class ;
+###  #Record
+<#Record> rdf:type owl:Class ;
                                             rdfs:subClassOf <http://dbpedia.org/resource/Record_(computer_science)> ,
                                                             <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
-                                                            <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+                                                            <#CranialObject> ,
                                                             [ rdf:type owl:Restriction ;
-                                                              owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                              owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#RecordTuple>
+                                                              owl:onProperty <#mayContainOneOrMore> ;
+                                                              owl:someValuesFrom <#RecordTuple>
                                                             ] ;
                                             rdfs:comment "A set of Key-Value pairs, each typically being a string mapped to a Vector, for example, a Python Dict object."@en-us ;
                                             rdfs:label "Cranial Record"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#RecordSet
-<http://ld.chapmanmedia.com/cranial#RecordSet> rdf:type owl:Class ;
+###  #RecordSet
+<#RecordSet> rdf:type owl:Class ;
                                                rdfs:subClassOf dbr:Iterator ,
                                                                <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
-                                                               <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+                                                               <#CranialObject> ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                                 owl:onProperty <#mayContainOneOrMore> ;
+                                                                 owl:someValuesFrom <#Record>
                                                                ] ;
                                                rdfs:label "RecordSet"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#RecordStream
-<http://ld.chapmanmedia.com/cranial#RecordStream> rdf:type owl:Class ;
-                                                  rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#RecordSet> ;
+###  #RecordStream
+<#RecordStream> rdf:type owl:Class ;
+                                                  rdfs:subClassOf <#RecordSet> ;
                                                   rdfs:label "Record Stream"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#RecordTuple
-<http://ld.chapmanmedia.com/cranial#RecordTuple> rdf:type owl:Class ;
+###  #RecordTuple
+<#RecordTuple> rdf:type owl:Class ;
                                                  rdfs:subClassOf dbr:Tuple ,
                                                                  [ rdf:type owl:Restriction ;
-                                                                   owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
+                                                                   owl:onProperty <#mustContainOne> ;
                                                                    owl:someValuesFrom dbr:Identifier
                                                                  ] ,
                                                                  [ rdf:type owl:Restriction ;
-                                                                   owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
+                                                                   owl:onProperty <#mustContainOne> ;
                                                                    owl:someValuesFrom <http://dbpedia.org/resource/Data_(computing)>
                                                                  ] ;
                                                  rdfs:label "RecordTuple"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#RemoteTrainer
-<http://ld.chapmanmedia.com/cranial#RemoteTrainer> rdf:type owl:Class ;
-                                                   rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#Trainer> ,
+###  #RemoteTrainer
+<#RemoteTrainer> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <#Trainer> ,
                                                                    [ rdf:type owl:Restriction ;
-                                                                     owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                     owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Notifier>
+                                                                     owl:onProperty <#mustContainOne> ;
+                                                                     owl:someValuesFrom <#Notifier>
                                                                    ] ;
                                                    rdfs:label "RemoteTrainer"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#RemoteTrainerService
-<http://ld.chapmanmedia.com/cranial#RemoteTrainerService> rdf:type owl:Class ;
-                                                          rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#Service> ,
-                                                                          <http://ld.chapmanmedia.com/cranial#Trainer> ,
+###  #RemoteTrainerService
+<#RemoteTrainerService> rdf:type owl:Class ;
+                                                          rdfs:subClassOf <#Service> ,
+                                                                          <#Trainer> ,
                                                                           [ rdf:type owl:Restriction ;
-                                                                            owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOneOrMore> ;
-                                                                            owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Listener>
+                                                                            owl:onProperty <#mustContainOneOrMore> ;
+                                                                            owl:someValuesFrom <#Listener>
                                                                           ] ,
                                                                           [ rdf:type owl:Restriction ;
-                                                                            owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOneOrMore> ;
-                                                                            owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#LocalTrainer>
+                                                                            owl:onProperty <#mustContainOneOrMore> ;
+                                                                            owl:someValuesFrom <#LocalTrainer>
                                                                           ] ;
                                                           rdfs:label "RemoteTrainerService"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Scheduler
-<http://ld.chapmanmedia.com/cranial#Scheduler> rdf:type owl:Class ;
-                                               rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ;
+###  #Scheduler
+<#Scheduler> rdf:type owl:Class ;
+                                               rdfs:subClassOf <#CranialObject> ;
                                                rdfs:label "Scheduler"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#SerDe
-<http://ld.chapmanmedia.com/cranial#SerDe> rdf:type owl:Class ;
-                                           rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #SerDe
+<#SerDe> rdf:type owl:Class ;
+                                           rdfs:subClassOf <#CranialObject> ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                             owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Deserializer>
+                                                             owl:onProperty <#mustContainOne> ;
+                                                             owl:someValuesFrom <#Deserializer>
                                                            ] ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                             owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Serializer>
+                                                             owl:onProperty <#mustContainOne> ;
+                                                             owl:someValuesFrom <#Serializer>
                                                            ] ;
                                            rdfs:comment "Transforms a Record between the software's native representation and a representation that can be sent across a network connection or written to external storage."^^xsd:string ;
                                            rdfs:label "SerDe"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#SerializedRecord
-<http://ld.chapmanmedia.com/cranial#SerializedRecord> rdf:type owl:Class ;
-                                                      rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#Record> ,
+###  #SerializedRecord
+<#SerializedRecord> rdf:type owl:Class ;
+                                                      rdfs:subClassOf <#Record> ,
                                                                       [ rdf:type owl:Restriction ;
-                                                                        owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
+                                                                        owl:onProperty <#mustContainOne> ;
                                                                         owl:someValuesFrom dbr:Byte_String
                                                                       ] ;
                                                       rdfs:comment "A Record represented as a byte-string suitable for writing to an external location."@en-us ;
                                                       rdfs:label "SerializedRecord"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#SerializedRecordSet
-<http://ld.chapmanmedia.com/cranial#SerializedRecordSet> rdf:type owl:Class ;
-                                                         rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#RecordSet> ,
+###  #SerializedRecordSet
+<#SerializedRecordSet> rdf:type owl:Class ;
+                                                         rdfs:subClassOf <#RecordSet> ,
                                                                          [ rdf:type owl:Restriction ;
-                                                                           owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                                           owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerializedRecord>
+                                                                           owl:onProperty <#mayContainOneOrMore> ;
+                                                                           owl:someValuesFrom <#SerializedRecord>
                                                                          ] ;
                                                          rdfs:label "SerializedRecordSet"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Serializer
-<http://ld.chapmanmedia.com/cranial#Serializer> rdf:type owl:Class ;
+###  #Serializer
+<#Serializer> rdf:type owl:Class ;
                                                 rdfs:subClassOf cogs:Transformation ,
                                                                 [ rdf:type owl:Restriction ;
-                                                                  owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                                  owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerializedRecord>
+                                                                  owl:onProperty <#returnsOutput> ;
+                                                                  owl:someValuesFrom <#SerializedRecord>
                                                                 ] ,
                                                                 [ rdf:type owl:Restriction ;
-                                                                  owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                                  owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                                  owl:onProperty <#takesInput> ;
+                                                                  owl:someValuesFrom <#Record>
                                                                 ] ;
                                                 rdfs:label "Serializer"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Service
-<http://ld.chapmanmedia.com/cranial#Service> rdf:type owl:Class ;
-                                             rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Service
+<#Service> rdf:type owl:Class ;
+                                             rdfs:subClassOf <#CranialObject> ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Model>
+                                                               owl:onProperty <#mayContainOneOrMore> ;
+                                                               owl:someValuesFrom <#Model>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContain> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceIdentifier>
+                                                               owl:onProperty <#mustContain> ;
+                                                               owl:someValuesFrom <#ServiceIdentifier>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOneOrMore> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceEndpoint>
+                                                               owl:onProperty <#mustContainOneOrMore> ;
+                                                               owl:someValuesFrom <#ServiceEndpoint>
                                                              ] ;
                                              rdfs:label "Service"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#ServiceDiscovery
-<http://ld.chapmanmedia.com/cranial#ServiceDiscovery> rdf:type owl:Class ;
-                                                      rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #ServiceDiscovery
+<#ServiceDiscovery> rdf:type owl:Class ;
+                                                      rdfs:subClassOf <#CranialObject> ,
                                                                       cogs:Service ,
                                                                       [ rdf:type owl:Restriction ;
-                                                                        owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                        owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#NotifierSet>
+                                                                        owl:onProperty <#mustContainOne> ;
+                                                                        owl:someValuesFrom <#NotifierSet>
                                                                       ] ,
                                                                       [ rdf:type owl:Restriction ;
-                                                                        owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                                        owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceSet>
+                                                                        owl:onProperty <#returnsOutput> ;
+                                                                        owl:someValuesFrom <#ServiceSet>
                                                                       ] ,
                                                                       [ rdf:type owl:Restriction ;
-                                                                        owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
-                                                                        owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Label>
+                                                                        owl:onProperty <#takesOptionalInput> ;
+                                                                        owl:someValuesFrom <#Label>
                                                                       ] ;
                                                       rdfs:label "ServiceDiscovery"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#ServiceEndpoint
-<http://ld.chapmanmedia.com/cranial#ServiceEndpoint> rdf:type owl:Class ;
+###  #ServiceEndpoint
+<#ServiceEndpoint> rdf:type owl:Class ;
                                                      rdfs:label "ServiceEndpoint"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#ServiceIdentifier
-<http://ld.chapmanmedia.com/cranial#ServiceIdentifier> rdf:type owl:Class ;
+###  #ServiceIdentifier
+<#ServiceIdentifier> rdf:type owl:Class ;
                                                        rdfs:subClassOf dbr:Identifier ;
                                                        rdfs:label "ServiceIdentifier"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#ServiceSet
-<http://ld.chapmanmedia.com/cranial#ServiceSet> rdf:type owl:Class ;
+###  #ServiceSet
+<#ServiceSet> rdf:type owl:Class ;
                                                 rdfs:subClassOf <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
                                                                 [ rdf:type owl:Restriction ;
-                                                                  owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                                  owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceTuple>
+                                                                  owl:onProperty <#mayContainOneOrMore> ;
+                                                                  owl:someValuesFrom <#ServiceTuple>
                                                                 ] ;
                                                 rdfs:label "ServiceSet"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#ServiceTuple
-<http://ld.chapmanmedia.com/cranial#ServiceTuple> rdf:type owl:Class ;
+###  #ServiceTuple
+<#ServiceTuple> rdf:type owl:Class ;
                                                   rdfs:subClassOf dbr:Tuple ,
                                                                   [ rdf:type owl:Restriction ;
-                                                                    owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                    owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#NotifierID>
+                                                                    owl:onProperty <#mustContainOne> ;
+                                                                    owl:someValuesFrom <#NotifierID>
                                                                   ] ,
                                                                   [ rdf:type owl:Restriction ;
-                                                                    owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                    owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceEndpoint>
+                                                                    owl:onProperty <#mustContainOne> ;
+                                                                    owl:someValuesFrom <#ServiceEndpoint>
                                                                   ] ,
                                                                   [ rdf:type owl:Restriction ;
-                                                                    owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                    owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#ServiceIdentifier>
+                                                                    owl:onProperty <#mustContainOne> ;
+                                                                    owl:someValuesFrom <#ServiceIdentifier>
                                                                   ] ;
                                                   rdfs:label "ServiceTuple"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#State
-<http://ld.chapmanmedia.com/cranial#State> rdf:type owl:Class ;
-                                           rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #State
+<#State> rdf:type owl:Class ;
+
+                                           rdfs:subClassOf <#CranialObject> ,
                                                            [ rdf:type owl:Restriction ;
-                                                             owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContain> ;
+                                                             owl:onProperty <#mayContain> ;
                                                              owl:someValuesFrom <http://dbpedia.org/resource/Data_(computing)>
                                                            ] ;
                                            rdfs:comment "Any data used by a StatefulModel to make Transformations."^^xsd:string ;
                                            rdfs:label "State"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#StatefulModel
-<http://ld.chapmanmedia.com/cranial#StatefulModel> rdf:type owl:Class ;
-                                                   rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#Model> ,
+###  #StatefulModel
+<#StatefulModel> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <#Model> ,
                                                                    [ rdf:type owl:Restriction ;
-                                                                     owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                                     owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Trainer>
+                                                                     owl:onProperty <#mayContainOneOrMore> ;
+                                                                     owl:someValuesFrom <#Trainer>
                                                                    ] ,
                                                                    [ rdf:type owl:Restriction ;
-                                                                     owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                                     owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#State>
+                                                                     owl:onProperty <#mustContainOne> ;
+                                                                     owl:someValuesFrom <#State>
                                                                    ] ;
                                                    rdfs:comment "A Model with a State."@en-us ;
                                                    rdfs:label "StatefulModel"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Step
-<http://ld.chapmanmedia.com/cranial#Step> rdf:type owl:Class ;
+###  #Step
+<#Step> rdf:type owl:Class ;
                                           rdfs:subClassOf <http://dbpedia.org/resource/Function_(Mathematics)> ,
-                                                          <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+                                                          <#CranialObject> ,
                                                           [ rdf:type owl:Restriction ;
-                                                            owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                            owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                            owl:onProperty <#returnsOutput> ;
+                                                            owl:someValuesFrom <#Record>
                                                           ] ,
                                                           [ rdf:type owl:Restriction ;
-                                                            owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                            owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Record>
+                                                            owl:onProperty <#takesInput> ;
+                                                            owl:someValuesFrom <#Record>
                                                           ] ,
                                                           [ rdf:type owl:Restriction ;
-                                                            owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
-                                                            owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#State>
+                                                            owl:onProperty <#takesOptionalInput> ;
+                                                            owl:someValuesFrom <#State>
                                                           ] ;
                                           rdfs:comment "An operation on a Record that can be executed by a Model."^^xsd:string ;
                                           rdfs:label "Step"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Trainer
-<http://ld.chapmanmedia.com/cranial#Trainer> rdf:type owl:Class ;
-                                             rdfs:subClassOf <http://ld.chapmanmedia.com/cranial#CranialObject> ,
+###  #Trainer
+<#Trainer> rdf:type owl:Class ;
+                                             rdfs:subClassOf <#CranialObject> ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mayContainOneOrMore> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Accumulator>
+                                                               owl:onProperty <#mayContainOneOrMore> ;
+                                                               owl:someValuesFrom <#Accumulator>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#mustContainOne> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#Scheduler>
+                                                               owl:onProperty <#mustContainOne> ;
+                                                               owl:someValuesFrom <#Scheduler>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#State>
+                                                               owl:onProperty <#returnsOutput> ;
+                                                               owl:someValuesFrom <#State>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#RecordStream>
+                                                               owl:onProperty <#takesInput> ;
+                                                               owl:someValuesFrom <#RecordStream>
                                                              ] ,
                                                              [ rdf:type owl:Restriction ;
-                                                               owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
-                                                               owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#State>
+                                                               owl:onProperty <#takesInput> ;
+                                                               owl:someValuesFrom <#State>
                                                              ] ;
                                              rdfs:label "Trainer"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#getMethod
-<http://ld.chapmanmedia.com/cranial#getMethod> rdf:type owl:Class ;
+###  #getMethod
+<#getMethod> rdf:type owl:Class ;
                                                rdfs:subClassOf cogs:Method ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#returnsOutput> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerializedRecordSet>
+                                                                 owl:onProperty <#returnsOutput> ;
+                                                                 owl:someValuesFrom <#SerializedRecordSet>
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
+                                                                 owl:onProperty <#takesOptionalInput> ;
                                                                  owl:someValuesFrom dbr:Identifier
                                                                ] ;
                                                rdfs:label "getMethod"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#putMethod
-<http://ld.chapmanmedia.com/cranial#putMethod> rdf:type owl:Class ;
+###  #putMethod
+<#putMethod> rdf:type owl:Class ;
                                                rdfs:subClassOf cogs:Method ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#takesInput> ;
+                                                                 owl:onProperty <#takesInput> ;
                                                                  owl:someValuesFrom dbr:Identifier
                                                                ] ,
                                                                [ rdf:type owl:Restriction ;
-                                                                 owl:onProperty <http://ld.chapmanmedia.com/cranial#takesOptionalInput> ;
-                                                                 owl:someValuesFrom <http://ld.chapmanmedia.com/cranial#SerializedRecordSet>
+                                                                 owl:onProperty <#takesOptionalInput> ;
+                                                                 owl:someValuesFrom <#SerializedRecordSet>
                                                                ] ;
                                                rdfs:label "putMethod"@en-us .
 
@@ -673,45 +674,45 @@ cogs:Transformation rdf:type owl:Class ;
 #    Individuals
 #################################################################
 
-###  http://ld.chapmanmedia.com/cranial#GoogleCloudStorage
-<http://ld.chapmanmedia.com/cranial#GoogleCloudStorage> rdf:type owl:NamedIndividual ,
-                                                                 <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #GoogleCloudStorage
+<#GoogleCloudStorage> rdf:type owl:NamedIndividual ,
+                                                                 <#Protocol> ;
                                                         rdfs:label "GoogleCloudStorage"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#HTTP
-<http://ld.chapmanmedia.com/cranial#HTTP> rdf:type owl:NamedIndividual ,
-                                                   <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #HTTP
+<#HTTP> rdf:type owl:NamedIndividual ,
+                                                   <#Protocol> ;
                                           rdfs:label "HTTP"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#Kafka
-<http://ld.chapmanmedia.com/cranial#Kafka> rdf:type owl:NamedIndividual ,
-                                                    <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #Kafka
+<#Kafka> rdf:type owl:NamedIndividual ,
+                                                    <#Protocol> ;
                                            rdfs:label "Kafka"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#LocalFilesystem
-<http://ld.chapmanmedia.com/cranial#LocalFilesystem> rdf:type owl:NamedIndividual ,
-                                                              <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #LocalFilesystem
+<#LocalFilesystem> rdf:type owl:NamedIndividual ,
+                                                              <#Protocol> ;
                                                      rdfs:label "LocalFilesystem"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#PythonDBAPI
-<http://ld.chapmanmedia.com/cranial#PythonDBAPI> rdf:type owl:NamedIndividual ,
-                                                          <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #PythonDBAPI
+<#PythonDBAPI> rdf:type owl:NamedIndividual ,
+                                                          <#Protocol> ;
                                                  rdfs:label "PythonDBAPI"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#S3
-<http://ld.chapmanmedia.com/cranial#S3> rdf:type owl:NamedIndividual ,
-                                                 <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #S3
+<#S3> rdf:type owl:NamedIndividual ,
+                                                 <#Protocol> ;
                                         rdfs:label "S3"@en-us .
 
 
-###  http://ld.chapmanmedia.com/cranial#ZMQ
-<http://ld.chapmanmedia.com/cranial#ZMQ> rdf:type owl:NamedIndividual ,
-                                                  <http://ld.chapmanmedia.com/cranial#Protocol> ;
+###  #ZMQ
+<#ZMQ> rdf:type owl:NamedIndividual ,
+                                                  <#Protocol> ;
                                          rdfs:label "ZMQ"@en-us .
 
 
