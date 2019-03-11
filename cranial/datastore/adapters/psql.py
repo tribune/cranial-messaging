@@ -72,13 +72,12 @@ def get_credentials(pgpass='~/.pgpass', append=False):
     return credentials
 
 
-def get_cursor(host: str = None,
-               user: str = None,
-               credentials_file='~/.pgpass'):
-
-    c = next(filter(lambda x: x['host'] == host and x['user'] == user,
-                    get_credentials(credentials_file)))
-
+def get_cursor(credentials_file='~/.pgpass', **kwargs):
+    creds = get_credentials(credentials_file)))
+    for k,v in kwargs.items():
+        creds = filter(lambda x: x[key] == x[value], creds)
+    
+    c = next(creds)
     if not c:
         raise Exception('No such credentials available.')
 
