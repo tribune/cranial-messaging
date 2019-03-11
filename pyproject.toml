@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cranial-datastore"
-version = "0.3.0"
+version = "0.3.1"
 description = "Data storage connectivity & utilities for Cranial."
 authors = ["Matt Chapman et al. <Matt@NinjitsuWeb.com>"]
 license = "GPL-3.0+"
