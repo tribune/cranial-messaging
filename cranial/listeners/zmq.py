@@ -10,7 +10,7 @@ log = logger.create('listeners',
 
 
 class Listener(base.Listener):
-    def __init__(self, port=5678):
+    def __init__(self, port=5678, **kwargs):
         self.context = zmq.Context.instance()
         self.server = self.context.socket(zmq.ROUTER)
         self.server.bind("tcp://*:" + str(port))
