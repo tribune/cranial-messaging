@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cranial-messaging"
-version = "0.3.0"
+version = "0.3.1"
 description = "Abstractions for high-level communication between micro-services."
 authors = ["Matt Chapman et al. <Matt@NinjitsuWeb.com>"]
 license = "GPL-3.0+"
