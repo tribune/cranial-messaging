@@ -17,13 +17,13 @@ class Listener(base.Listener):
         log.info('Running ZMQ Server on port ' + str(port))
         super().__init__()
 
-    def recv(self):
+    def recv(self, *args, **kwargs):
         super().recv()
         address, _, msg = self.server.recv_multipart()
         self.address = address
         return msg
 
-    def resp(self, data: bytes):
+    def resp(self, data: bytes, *args, **kwargs):
         self.server.send_multipart([
             self.address,
             b'',
