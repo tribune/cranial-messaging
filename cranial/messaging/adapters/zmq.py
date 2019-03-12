@@ -63,17 +63,17 @@ def zpipe(ctx):
     return a, b
 
 
-def send_string(s: str, host: str, wait=True) -> str:
+def send_string(s: str, host: str, wait=True, encoding='utf-8') -> str:
     context = zmq.Context.instance()
     client = context.socket(zmq.REQ)
     set_id(client)
     client.connect("tcp://" + host)
 
-    msg = bytes(s, 'ascii')
+    msg = msg if type(msg) is bytes else bytes(msg, 'encoding')
     client.send(msg)
     response = ''
     if wait:
-        response = client.recv().decode('ascii', 'ignore')
+        response = client.recv().decode(encoding, 'ignore')
     return response
 
 
@@ -86,16 +86,16 @@ def get_client(port=5678, host='localhost'):
 
 
 def client_send_request(client, msg) -> str:
-    """Probably you should be using zmq_send_string() instead of this
+    """Probably you should be using send_string() instead of this
     function."""
-    msg = msg if type(msg) is bytes else bytes(msg, 'ascii')
+    msg = msg if type(msg) is bytes else bytes(msg, 'utf-8')
     client.send(msg)
     start = time()
     resp = client.recv()
     end = time()
-    log.debug(resp.decode('ascii'))
+    log.debug(resp.decode('utf-8'))
 
     t = end - start
     log.debug("Time: {:.3f}".format(t))
 
-    return resp.decode('ascii')
+    return resp.decode('utf-8')
