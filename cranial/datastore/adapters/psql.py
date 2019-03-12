@@ -1,6 +1,7 @@
 '''
 Helpers for postgres/redshift.
 '''
+import os
 from select import select
 from typing import Dict, List, Optional  # noqa
 
@@ -48,6 +49,8 @@ credentials = None  # type: Optional[List]
 
 def _split_parts(parts: List[str]) -> Dict[str, Optional[str]]:
     c = default_config.copy()
+    if len(parts) < 5:
+        return c
     c['host'], c['port'], c['dbname'], c['user'], c['password'] = parts
     for key, value in c.items():
         if value == '*':
@@ -62,7 +65,7 @@ def get_credentials(pgpass='~/.pgpass', append=False):
     if credentials is None or append:
         credentials = credentials or []
 
-        with open(pgpass) as f:
+        with open(os.path.expanduser(pgpass)) as f:
             for line in f.readlines():
                 line = line.strip('\n')
                 parts = line.split(":")
@@ -73,9 +76,9 @@ def get_credentials(pgpass='~/.pgpass', append=False):
 
 
 def get_cursor(credentials_file='~/.pgpass', **kwargs):
-    creds = get_credentials(credentials_file)))
-    for k,v in kwargs.items():
-        creds = filter(lambda x: x[key] == x[value], creds)
+    creds = get_credentials(credentials_file)
+    for key, value in kwargs.items():
+        creds = filter(lambda x: x.get(key) == value, creds)
     
     c = next(creds)
     if not c:
