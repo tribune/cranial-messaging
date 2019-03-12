@@ -33,7 +33,7 @@ class Listener(metaclass=ABCMeta):
         self.waiting = False
 
     @abstractmethod
-    def recv(self) -> bytes:
+    def recv(self, **kwargs) -> bytes:
         if self.waiting:
             raise ListenerHasNotResponded(
                 'Called recv again before responding.')
@@ -41,7 +41,7 @@ class Listener(metaclass=ABCMeta):
         return bytes()
 
     @abstractmethod
-    def resp(self, data: bytes) -> bool:
+    def resp(self, data: bytes, **kwargs) -> bool:
         self.waiting = False
         successfully_sent = True
         return True if successfully_sent else False
@@ -53,7 +53,7 @@ class Demo(Listener):
         self.ix = 0
         super().__init__()
 
-    def recv(self):
+    def recv(self, **kwargs):
         super().recv()
         res = self.events[self.ix]
         res = '\t'.join([str(itm) for itm in res])
@@ -65,5 +65,5 @@ class Demo(Listener):
         self.response = res
         return res
 
-    def resp(self, data):
+    def resp(self, data, **kwargs):
         super().resp(bytes(self.res))
