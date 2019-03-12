@@ -69,7 +69,7 @@ def send_string(s: str, host: str, wait=True, encoding='utf-8') -> str:
     set_id(client)
     client.connect("tcp://" + host)
 
-    msg = msg if type(msg) is bytes else bytes(msg, 'encoding')
+    msg = s if type(s) is bytes else bytes(s, 'encoding')
     client.send(msg)
     response = ''
     if wait:
