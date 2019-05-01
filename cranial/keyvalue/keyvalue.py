@@ -4,6 +4,7 @@ from typing import Iterable
 from cachetools import TTLCache
 
 from cranial.common import logger
+from cranial.datastore.dbapi import get_temp_db
 
 log = logger.get(name='cranial.keyvalue')
 
@@ -845,15 +846,6 @@ class StringKeyRowDB(KeyRowDB):
 class UncountableKeyRowDB(KeyRowDB):
     def __len__(self):
         return 1
-
-
-def get_temp_db(filename=None):
-    import sqlite3
-    if filename is None:
-        conn = sqlite3.connect(":memory:")
-    else:
-        conn = sqlite3.connect(filename)
-    return conn.cursor()
 
 
 def get_mock(name='test', filename=None):

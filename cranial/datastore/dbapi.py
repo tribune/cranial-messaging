@@ -78,3 +78,12 @@ def render_params(conn, chunks):
         style = 'format'
 
     return vars()['to_' + style](chunks)
+
+
+def get_temp_db(filename=None):
+    import sqlite3
+    if filename is None:
+        conn = sqlite3.connect(":memory:")
+    else:
+        conn = sqlite3.connect(filename)
+    return conn.cursor()
