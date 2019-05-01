@@ -84,14 +84,8 @@ def get_cursor(credentials_file='~/.pgpass', **kwargs):
     if not c:
         raise Exception('No such credentials available.')
 
-    # build connection string
-    conn_str = ' '.join(["{}='{}'".format(k, v)
-                        for k, v in c.items()])
-    # connect
-    conn = psycopg2.connect(conn_str)
-    conn.autocommit = True
-    return conn.cursor()
-
+    return SingleCursorDatabaseConnector(c['dbname'], c['host'], c['port'],
+            c['user'], c['password'])
 
 def query(q: str, credentials_file='.pgpass'):
     '''
