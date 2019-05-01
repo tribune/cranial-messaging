@@ -71,7 +71,7 @@ def get_paramstyle(conn):
     return mod.paramstyle
 
 
-def query_chunks_to_db_params(conn, chunks):
+def render_params(conn, chunks):
     try:
         style = get_paramstyle(conn)
     except:
