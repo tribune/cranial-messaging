@@ -16,7 +16,7 @@ class Listener(base.Listener):
                  table: str,
                  id_col: str,
                  last_id: Any = None,
-                 limit = 1000
+                 limit = 1000,
                  **kwargs) -> None:
         """
         Parameters
@@ -53,10 +53,10 @@ class Listener(base.Listener):
     def _queue_results(self):
         # render_params helps because we don't want to assuem the data type of
         # the id column.
-        query, params = render_params((self.query_head,
-                                       Param(self.last_id),
-                                       'LIMIT {} ORDER BY {} ASC'.format(
-                                           self.limit, self.id_col)))
+        chunks = (self.query_head,
+                  Param(self.last_id),
+                  ' LIMIT {} ORDER BY {} ASC'.format(self.limit, self.id_col))
+        query, params = render_params(self.cursor, chunks)
         self.cursor.execute(query, params)
         if not self.col_names:
             self.col_names = [x[0] for x in self.cursor.description]
