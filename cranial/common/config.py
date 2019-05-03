@@ -1,15 +1,21 @@
 """
-This model exists to support the 12-factor App approach to configuration.
+This module exists to support the 12-factor App approach to configuration,
+while also supporting convenient CLIs. This provides a subset of the
+functionality of the `click` module, so you probably don't need this if you're
+already using click.
+
+CLI options take precendence over Environment Variables.
 
 We assume, but do not enforce, the use of the `docopt` module to handle
 configuration via command-line arguments. Any dict[str, str] of config values
-will do.
+will do, if you prefer to use lower level argument parsing.
+
 
 Typical usage:
-    - Read command-line args first, e.g., `opts = docopt.docopt(__doc__)`
-    - Read and store environment variables, over-writing with CLI args with
+    1. Read command-line args first, e.g., `opts = docopt.docopt(__doc__)`
+    2. Read and store environment variables, with
       `config.load(opts, 'some_env_var_prefix')`.
-    - Throught the application, use `config.get()` to get a dict of
+    3. Throughout the application, use `config.get()` to get a dict of
       configuration values.
 """
 
@@ -17,8 +23,9 @@ from collections import OrderedDict
 import os
 from typing import Any, Dict, Optional, Tuple  # noqa
 
-immutable_config_keys = None  # type: Optional[Tuple[str]]
-immutable_config_values = None  # type: Optional[Tuple[Any]]
+import yaml
+
+immutable_config_values = None  # type: Optional[Dict[str, Any]]
 
 
 def opts2env(opts: Dict[str, str], prefix: str) -> None:
@@ -62,23 +69,28 @@ def load_from_env(prefix: str):
 
 
 def load(opts: Dict[str, str], prefix: str):
-    global immutable_config_keys
     global immutable_config_values
-    if immutable_config_keys is not None:
+    if immutable_config_values is not None:
         raise Exception('load() function should only be called once.')
     opts2env(opts, prefix)
     env = load_from_env(prefix)
-    config = OrderedDict(env)
-    immutable_config_keys = tuple(config.keys())  # type: ignore
-    immutable_config_values = tuple(config.keys())  # type: ignore
+    immutable_config_values = OrderedDict(env)
     return env
 
 
-def get():
-    if immutable_config_keys is None:
+def parse_yaml_file(fname: str):
+    doc = open(fname, 'r')
+    return yaml.load(doc)
+
+
+def get(key=None):
+    if immutable_config_values is None:
         raise Exception('Config not yet loaded. Call load() instead.')
-    return dict(zip(immutable_config_keys or tuple(),
-                    immutable_config_values or tuple()))
+    if key:
+        val = immutable_config_values[key]
+        return val.copy() if hasattr(val, 'copy') else val
+    else:
+        return immutable_config_values.copy()
 
 
 if __name__ == "__main__":

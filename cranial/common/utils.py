@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, List
 
 
 def update_ordered_list(old: List, new: List) -> List:
@@ -48,3 +48,24 @@ def str2bucket(text: str, num_buckets: int) -> int:
         return 0
     from hashlib import md5
     return int(md5(text.encode()).hexdigest(), 16) % num_buckets
+
+
+def dieIf(msg: str, fn: Callable, *args, **kwargs):
+    """Wrap Exceptions in friendlier messages."""
+    try:
+        return fn(*args, **kwargs)
+    except Exception e:
+        logging.error('{}. Function: {}; Args: {}; Keywords: {}', 
+                      fn._name__,e, args, kwargs)
+        raise Exception(msg)
+
+
+def warnIf(msg: str, fn: Callable, *args, **kwargs):
+    """Transform exceptions into warnings."""
+    try:
+        return fn(*args, **kwargs)
+    except Exception e:
+        logging.warn(e)
+        logging.warn('{}. Function: {}; Args: {}; Keywords: {}', 
+              msg, fn.__name__, args, kwargs)
+        return None
