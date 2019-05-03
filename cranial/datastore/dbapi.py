@@ -77,7 +77,7 @@ def render_params(conn, chunks):
     except:
         style = 'format'
 
-    return vars()['to_' + style](chunks)
+    return globals()['to_' + style](chunks)
 
 
 def get_temp_db(filename=None):

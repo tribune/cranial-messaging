@@ -127,7 +127,13 @@ class SingleCursorDatabaseConnector(object):
     cursor management happens on the method calls.
     """
 
-    def __init__(self, database, host, port, user, password, autocommit=True):
+    def __init__(self,
+                 database,
+                 host='localhost',
+                 port=5439,
+                 user='postgres',
+                 password='postgres',
+                 autocommit=True):
         """
         Lazy constructor for the class.
 
