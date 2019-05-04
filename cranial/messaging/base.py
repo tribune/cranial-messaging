@@ -3,21 +3,17 @@
 """
 
 from abc import ABCMeta, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
+import importlib
 from random import randint
-import requests
 import tempfile
 from threading import Thread
-from concurrent.futures import ThreadPoolExecutor
-from time import sleep, time
-from typing import Any, Dict, List, IO, TYPE_CHECKING  # noqa
-import os
+from time import time
+from typing import Any, Dict, List, IO, Optional, TYPE_CHECKING  # noqa
 
 from cranial.common import logger
 from cranial.servicediscovery import marathon
-from cranial.messaging.adapters import firehose
 
-if TYPE_CHECKING:
-    import confluent_kafka
 
 log = logger.get('MESSAGING_LOGLEVEL')
 
@@ -29,7 +25,7 @@ class NotifyException(Exception):
 class Notifier(metaclass=ABCMeta):
     # Optionally, @staticmethod
     @abstractmethod
-    def send(self, address, message, endpoint):
+    def send(self, address: Optional[str], message: str, endpoint: Optional[str]):
         return False
 
 
@@ -37,109 +33,6 @@ class AsyncNotifier(Notifier, metaclass=ABCMeta):
     @abstractmethod
     def finish(self):
         raise Exception('Not Implemented')
-
-
-class HTTP_Notifier(Notifier):
-    @staticmethod
-    def send(address, message, endpoint):
-        count = 0
-        while count < 3:
-            response = requests.get('http://{}/{}/{}'.format(
-                address, endpoint, message))
-            if response.status_code == requests.codes.ok:
-                return True
-            count += 1
-            sleep(5)
-
-        return False
-
-
-class MockKafkaProducer:
-    queue = []  # type: List
-
-    def produce(self, endpoint, message):
-        self.queue.append('{}: {}'.format(endpoint, message))
-
-    def flush(self):
-        for m in self.queue:
-            print(m)
-        self.queue = []
-
-
-reusable_producer_instance = None
-
-
-def get_reusable_kafka_producer(hosts_csv):
-    global reusable_producer_instance
-    from cranial.messaging.adapters import kafka as kafka_client
-    if not reusable_producer_instance:
-        reusable_producer_instance = kafka_client.get_producer(hosts_csv)
-    return reusable_producer_instance
-
-
-class KAFKA_Notifier(Notifier):
-    """ This Notifier is a bit odd because the kafka_client is inherently
-    asynchronous. The send() method returns once the message is in the client's
-    queue. The finish() method returns once the message has been delievered to a
-    Kafka broker. So to be truly synchronous, the usage would be:
-        KAFKA_Notifier().send(
-            address=None, message='Hello', endpoint='channel'
-            ).finish()
-
-    In the context of a Messenger, the default behavior is to call finish()
-    when it is present, so to be truly asynchronous the usage would be:
-        Messenger().notify(message, wait=False)
-
-    ...even when the consumer is using the AsyncKafka notification type.
-
-    I.e., we err on the side of ensuring that the message has been delievered to
-    a Broker. If you are willing to risk lost messages in the case of a local
-    machine crash or similar failure, then you can use the forms above.
-
-    >>> k = KAFKA_Notifier(client=MockKafkaProducer())
-    >>> result = k.send(None, 'foo', 'bar')
-    >>> True if result else False
-    True
-    >>> k.finish()
-    bar: foo
-    []
-    >>> def svc(label):
-    ...     return {'any': {'test': ['localhost:0000']}}
-    ...
-    >>> def proto(label):
-    ...     return {'kafka': ['test']}
-    ...
-    >>> def factory(proto):
-    ...    return k
-    ...
-    >>> m = Messenger(service_discovery=svc,
-    ...               protocol_discovery=proto,
-    ...               factory=factory)
-    ...
-    >>> result = m.notify('value')
-    key: value
-    >>> True if result else False
-    True
-    >>> m.notify('value2', wait=False)
-    True
-    """
-
-    def __init__(self,
-                 hosts_csv: str = None,
-                 client: 'confluent_kafka.Producer' = None) -> None:
-        self.client = client or get_reusable_kafka_producer(hosts_csv)
-
-    def send(self, address, message, endpoint):
-        """ Note `address` is ignored, since routing is handled by the
-        kafka_client.
-        """
-        log.debug('Sent "{}" to Kafka stream {}.'.format(message, endpoint))
-        self.client.produce(endpoint, message)
-        return self
-
-    def finish(self):
-        self.client.flush()
-        return []
 
 
 class Async_Wrapper(AsyncNotifier):
@@ -191,66 +84,19 @@ class Async_WrapperPool(AsyncNotifier):
         return [e for e in errors if e is not None]
 
 
-class ZMQ_Notifier(Notifier):
-    def send(self, address, message, endpoint):
-        from cranial.messaging.adapters.zmq import send_string
-        return send_string(message, address, wait=False)
-
-
-class LocalDisk_Notifier(Notifier):
-    """ Write messages to a local file named `address`
-
-    Tested in LocalMessenger().
-    """
-    logfiles = {}  # type: Dict[str, IO]
-
-    def send(self, address, message, endpoint=None):
-        try:
-            if address not in self.logfiles.keys() \
-                    or self.logfiles[address].closed:
-                # make sure the path exists
-                d, _ = os.path.split(address)
-                if d != '':
-                    os.makedirs(d, exist_ok=True)
-                self.logfiles[address] = open(address, 'a')
-
-            return self.logfiles[address].write(message + '\n')
-        except Exception as e:
-            raise NotifyException("{} || address: {} || message: {}".format(
-                e, address, message))
-
-    def finish(self):
-        for _, fh in self.logfiles.items():
-            fh.flush()
-
-    def __del__(self):
-        for _, fh in self.logfiles.items():
-            fh.close()
-
-
-class FIREHOSE_Notifier(Notifier):
-    def __init__(self):
-        self.client = firehose.get_client()
-
-    def send(self, address, message, endpoint):
-        self.firehose.put_record(DeliveryStreamName=endpoint,
-                                 Record={'Data': bytes(message, 'utf8')})
-        return True
-
-
-def default_factory(proto: str):
+def default_factory(proto: str) -> Notifier:
     # Avoid case-sensitivity.
-    proto = proto.upper()
+    proto = proto.lower()
 
     # Kafka is inherently Async; wrapping is unnecessary overheard.
-    assert not ('ASYNC' in proto and 'KAFKA' in proto)
+    assert not ('async' in proto and 'kafka' in proto)
 
-    # Find the Class that handles this Notifiction type.
-    class_name = proto.replace('ASYNC', '') + '_Notifier'
-    g = globals()
-    notifier = g[class_name]() if class_name in g else KAFKA_Notifier()
+    # Find the module that handles this Notifiction type.
+    name = proto.replace('async', '')
+    mod = importlib.import_module('cranial.messaging.' + name)
+    notifier = mod.Notifier()  # type: ignore
 
-    if 'ASYNC' in proto:
+    if 'async' in proto:
         notifier = Async_Wrapper(notifier)
 
     return notifier
@@ -262,7 +108,7 @@ class Messenger():
     def __init__(self, endpoint='key', label='CONTENT_PROCESSOR',
                  opts={'DEPRECATED': 1},
                  # service_discovery: Discovery = marathon.Discovery,
-                 service_discovery=marathon.get_tasks_by_label,
+                 service_discovery=None,
                  protocol_discovery=None,
                  factory=None):
         """
@@ -298,12 +144,11 @@ class Messenger():
             A function that takes a protocol string and returns a Notifier().
 
         """
-
         self.endpoint = endpoint
         self.label = label
         self.hosts = {'time': 0}  # type: Dict[str, Any]
         self.opts = opts
-        self.services = service_discovery
+        self.services = service_discovery or marathon.get_tasks_by_label
         self.protocols = protocol_discovery if protocol_discovery \
             else lambda _: marathon.get_tasks_by_label('NOTIFIER')
         self.factory = factory if factory else default_factory
@@ -325,7 +170,7 @@ class Messenger():
             return
         if self.opts.get('--local'):
             port = self.opts.get('PORT', '5000')
-            mtype = self.opts.get('TYPE', 'http')
+            mtype = self.opts.get('TYPE', 'httpget')
             self.hosts = {'time': time(),
                           'data': {'all': {'local': ['localhost:' + port]},
                                    'any': {},
@@ -363,10 +208,6 @@ class Messenger():
             if len(instances) == 0:
                 continue
             notifier = self.get_notifier_for_service(svc)
-            if type(notifier) is KAFKA_Notifier:
-                log.error('A service requested messages to all nodes via Kafka.'
-                          + ' Kafka consumers should use "any" mode.')
-                break  # @TODO log or something.
             threads[svc] = notifier
             for inst in instances:
                 log.debug(
@@ -392,7 +233,7 @@ class Messenger():
             # I don't like this ugly hack for Kafka. :-(
             # We should use service meta-data for a service to declare
             # what modes it supports. ServiceDiscovery should solve this. @TODO
-            if type(notifier) is KAFKA_Notifier:
+            if notifier.__module__ == 'kafka':
                 if sent_kafka:
                     continue
                 else:
@@ -418,8 +259,8 @@ class Messenger():
         if wait:
             for svc, notifier in threads.items():
                 if hasattr(notifier, 'finish'):
-                    fails = notifier.finish()
-                    if len(fails) > 0:
+                    fails = notifier.finish()  # type: ignore
+                    if fails and len(fails) > 0:
                         failed.add('{svc}({hosts})'.format(
                             svc=svc, hosts=','.join(fails)))
 
@@ -452,14 +293,14 @@ class LocalMessenger(Messenger):
     ['hello\\n', 'world\\n']
     """
 
-    def __init__(self, endpoint='log', async=False,
+    def __init__(self, endpoint='log', wait=True,
                  *args, **kwargs):
         self.endpoint = endpoint
         self.label = 'NA'
         self.hosts = {'time': 0}
         self.opts = {}
-        tmpdir = dir or tempfile.mkdtemp()
+        tmpdir = tempfile.mkdtemp()
         self.services = lambda _: {'all': {'local': [tmpdir]}}
-        self.protocols = lambda _: {'AsyncLocalDisk' if async else 'LocalDisk':
+        self.protocols = lambda _: {'AsyncLocalDisk' if not wait else 'LocalDisk':
                                     self.services('NA')['all']}
-        self.factory = lambda _: LocalDisk_Notifier()
+        self.factory = lambda _: default_factory('localdisk')
