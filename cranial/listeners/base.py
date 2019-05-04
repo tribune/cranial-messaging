@@ -17,16 +17,32 @@ class Listener(metaclass=ABCMeta):
     """A Listener is a stateful object that listens for a request from a client
     and returns a response.
 
-    - Users should not assume a Listener is thread-safe.
+    - Users should not assume a Listener is thread-safe; it depends on the
+      implementation details. It's recommended to use a single Listener that
+      recieves mesages and puts them into a thread-safe Queue for use by other
+      threads.
+    """
+    def __init__(self, **kwargs):
+        return
 
-    - A Listener handles only one message at a time, so it can
+    @abstractmethod
+    def recv(self, **kwargs) -> bytes:
+        return bytes()
+
+
+class RespondingListener(Listener, metaclass=ABCMeta):
+    """A RespondingListener handles only one message at a time, so it can
     'remember' meta-data from the request to use in constructing the response.
     This means that if the consumer calls Listener.recv() twice before
     calling Listener.respond(), the first request may be aborted. (Individual
     implementations may choose how to handle this case.)
 
+    Users should not assume a Listener is thread-safe; it depends on the
+    implementation details. It's recommended to use a seperate
+    RespondingListener per thread.
+
     For example, a single web server thread is an example of the concept of a
-    Listener. One could trivially implement an HTTP listener.
+    RespodningListener. One could trivially implement an HTTP listener.
     """
 
     def __init__(self, **kwargs):
@@ -47,7 +63,7 @@ class Listener(metaclass=ABCMeta):
         return True if successfully_sent else False
 
 
-class Demo(Listener):
+class Demo(RespondingListener):
     def __init__(self, events):
         self.events = events
         self.ix = 0

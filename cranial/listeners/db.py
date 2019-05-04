@@ -10,7 +10,6 @@ log = logger.create('db_listener',
 
 
 class Listener(base.Listener):
-
     def __init__(self,
                  cursor,
                  table: str,
@@ -70,6 +69,3 @@ class Listener(base.Listener):
         if len(self.queue) == 0:
             self._queue_results()
         return self.queue.popleft()
-
-    def resp(self, **kwargs):
-        raise Exception('Undefined.')

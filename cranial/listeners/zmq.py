@@ -9,7 +9,7 @@ log = logger.create('listeners',
                     logger.fallback('LISTENERS_LOGLEVEL', 'WARNING'))
 
 
-class Listener(base.Listener):
+class Listener(base.RespondingListener):
     def __init__(self, port=5678, **kwargs):
         self.context = zmq.Context.instance()
         self.server = self.context.socket(zmq.ROUTER)

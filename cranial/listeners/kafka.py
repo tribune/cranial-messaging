@@ -40,7 +40,3 @@ class Listener(base.Listener):
             else:
                 log.info(alert)
             return None
-
-    def resp(self, data=None):
-        """Kafka is one-way communication."""
-        raise Exception('Kafka cannot send responses.')
