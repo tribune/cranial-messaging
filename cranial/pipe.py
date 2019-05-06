@@ -1,7 +1,7 @@
-"""Usage: pipe.py -f=<file> [<listener>] [<target>]
+"""Usage: pipe.py [--config <file>] [<listener>] [<target>]
 
 Options:
-  -f=<file>  Config file.
+  --config=<file>, -f=<file>  Config file.
 
 Config Example:
 listener: module=stdin
@@ -16,24 +16,37 @@ from docopt import docopt
 import cranial.common.config as config
 from cranial.common.utils import dieIf, warnIf
 
-dieIf("Couldn't load config", config.load,
-      opts=docopt(__doc__), prefix='cranial_pipe', fname='config.yml')
+opts = docopt(__doc__)
 
-listener = dieIf("Listener not properly configured",
-                 config.factory,
-                 config.get('listener').update({'class': 'Listener'}))
+if opts.get('-f'):
+    dieIf("Couldn't load config", config.load,
+          opts, prefix='cranial_pipe', fname=opts['-f'])
+else:
+    dieIf("Couldn't load config", config.load,
+          opts, prefix='cranial_pipe')
+
+
+listener = dieIf("Listener not properly configured", config.factory,
+                 {**config.get('listener'),
+                  **{'package': 'cranial.listeners', 'class': 'Listener'}})
+
+send_params = config.get('target')
 
 target = dieIf("Target not properly configured", config.factory,
-               config.get('target').update({'class': 'Notifier'}))
+               {**send_params,
+                **{'package': 'cranial.messaging', 'class': 'Notifier'}})
 
 sleep_time = config.get('sleep', 1)
 
 while True:
-    message = listener.recv()
+    try:
+        message = listener.recv()
+    except StopIteration:
+        break
     if message:
         logging.debug('Received Message: {}', message)
-        response = warnIf("Couldn't send", target.notifier.send,
-                          **target.config.update(message=message))
+        send_params['message'] = message
+        response = warnIf("Couldn't send", target.send, **send_params)
         sleep_count = 0
     else:
         sleep(sleep_time)

@@ -23,6 +23,9 @@ class NotifyException(Exception):
 
 
 class Notifier(metaclass=ABCMeta):
+    def __init__(self, **kwargs):
+        pass
+
     # Optionally, @staticmethod
     @abstractmethod
     def send(self, address: Optional[str], message: str, endpoint: Optional[str]):
