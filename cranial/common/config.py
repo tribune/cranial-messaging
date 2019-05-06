@@ -20,12 +20,17 @@ Typical usage:
 """
 
 from collections import OrderedDict
+import importlib
 import os
-from typing import Any, Dict, Optional, Tuple  # noqa
+from typing import Any, Dict, Optional, Tuple, Union  # noqa
+import urllib.parse
 
 import yaml
 
-immutable_config_values = None  # type: Optional[Dict[str, Any]]
+ConfigValue = Union[str, bool, Dict[str, Any]]
+ConfigStore = Dict[str, ConfigValue]
+
+immutable_config_values = None  # type: Optional[ConfigStore]
 
 
 def opts2env(opts: Dict[str, str], prefix: str) -> None:
@@ -48,49 +53,96 @@ def opts2env(opts: Dict[str, str], prefix: str) -> None:
             os.environ[name] = '1' if v is True else str(v)
 
 
-def load_from_env(prefix: str):
+def load_from_env(prefix: str) -> ConfigStore:
     """ Returns a dict of environment variables with the given case-insensitive
     prefix.
 
-    >>> os.environ['DSE_LOAD_TEST_FOO'] = '0'
-    >>> os.environ['DSE_LOAD_TEST_BAR'] = 'hello'
-    >>> load_config_from_env('dse_LOAD_test') == {'FOO': False, 'BAR': 'hello'}
+    >>> os.environ['CTEST_FOO'] = '0'
+    >>> os.environ['CTEST_BAR'] = 'hello'
+    >>> os.environ['CTEST_URI'] = 'kafka://host/ok?mode=hot'
+    >>> conf = load_from_env('CtEsT')
+    >>> conf['FOO']
+    False
+    >>> conf['BAR']
+    'hello'
+    >>> conf['URI'] == dict(\
+    module='kafka', address='host', endpoint='ok', mode='hot')
     True
     """
     prefix = prefix.upper()
-    config = {}
+    config = {}  # type: ConfigStore
+    k = ''  # type: str
+    v = ''  # type: ConfigValue
     for k, v in os.environ.items():
         if not k.startswith(prefix + '_'):
             continue
-        # Make falsey things actually False.
-        v = False if v.lower() in ['0', 'false'] else v  # type: ignore
+        # Parse URLs.
+        if type(v) is str and '://' in str(v):
+            config[k.upper() + '_STR'] = v
+            parse = urllib.parse.urlparse(str(v))
+            d = {'module': parse.scheme,
+                 'address': parse.netloc,
+                 'endpoint': parse.path[1:]}  # type: Dict[str, Any]
+            if parse.query:
+                q = urllib.parse.parse_qs(parse.query)
+                d.update({k: i[0] if len(i) < 2 else i
+                         for k, i in q.items()})
+            v = d
+        elif type(v) is str:
+            # Make falsey things actually False.
+            v = False if str(v).lower() in ['0', 'false'] else v
         config[k.replace(prefix + '_', '')] = v
     return config
 
 
-def load(opts: Dict[str, str], prefix: str):
+def load(opts: Dict[str, str], prefix: str, fname=None) -> ConfigStore:
+    """
+    >>> o = {}
+    >>> o['--foo'] = '0'
+    >>> o['--bar'] = 'hello'
+    >>> o['--uri'] = 'kafka://host/ok?mode=hot'
+    >>> conf = load(o, 'CteSt')
+    >>> conf['FOO']
+    False
+    >>> conf['BAR']
+    'hello'
+    >>> conf['URI'] == dict(\
+    module='kafka', address='host', endpoint='ok', mode='hot')
+    True
+    >>> os.environ['CTEST_URI']
+    'kafka://host/ok?mode=hot'
+    """
     global immutable_config_values
     if immutable_config_values is not None:
         raise Exception('load() function should only be called once.')
+    conf = parse_yaml_file(fname) if fname else {}
     opts2env(opts, prefix)
-    env = load_from_env(prefix)
-    immutable_config_values = OrderedDict(env)
-    return env
+    conf.update(load_from_env(prefix))
+    immutable_config_values = OrderedDict(conf)
+    return conf
 
 
-def parse_yaml_file(fname: str):
+def parse_yaml_file(fname: str) -> Dict[str, Any]:
     doc = open(fname, 'r')
     return yaml.load(doc)
 
 
-def get(key=None):
+def get(key=None) -> Union[ConfigStore, ConfigValue]:
     if immutable_config_values is None:
         raise Exception('Config not yet loaded. Call load() instead.')
     if key:
         val = immutable_config_values[key]
-        return val.copy() if hasattr(val, 'copy') else val
+        return val.copy() if hasattr(val, 'copy') else val  # type: ignore
     else:
         return immutable_config_values.copy()
+
+
+def factory(params: Dict) -> Any:
+    mod = importlib.import_module(params['module'])
+    cl = params['class']
+    del(params['module'])
+    del(params['class'])
+    return mod[cl](**params)  # type: ignore
 
 
 if __name__ == "__main__":
