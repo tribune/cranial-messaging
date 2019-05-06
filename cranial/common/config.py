@@ -38,17 +38,17 @@ def opts2env(opts: Dict[str, str], prefix: str) -> None:
     with the given case-insensitive prefix. `__name__` might make a good
     prefix.
 
-    >>> opts2env({'--monty': 'spam', 'WITCH': True, 'duck': False}, 'dse_test')
-    >>> os.environ['DSE_TEST_MONTY']
+    >>> opts2env({'--monty': 'spam', '<WITCH>': True, 'duck': False}, 'ctest')
+    >>> os.environ['CTEST_MONTY']
     'spam'
-    >>> os.environ['DSE_TEST_WITCH']
+    >>> os.environ['CTEST_WITCH']
     '1'
-    >>> os.environ.get('DSE_TEST_DUCK', 'missing')
+    >>> os.environ.get('CTEST_DUCK', 'missing')
     'missing'
     """
     prefix = prefix.upper()
     for k, v in opts.items():
-        name = prefix + '_' + k.upper().replace('--', '').replace('-', '_')
+        name = prefix + '_' + k.upper().strip('-<> ').replace('-', '_')
         if v is not False and v is not None:
             os.environ[name] = '1' if v is True else str(v)
 
@@ -127,22 +127,26 @@ def parse_yaml_file(fname: str) -> Dict[str, Any]:
     return yaml.load(doc)
 
 
-def get(key=None) -> Union[ConfigStore, ConfigValue]:
+def get(key=None, default=None) -> Union[ConfigStore, ConfigValue]:
     if immutable_config_values is None:
         raise Exception('Config not yet loaded. Call load() instead.')
     if key:
-        val = immutable_config_values[key]
+        val = immutable_config_values.get(key.upper(), default)
         return val.copy() if hasattr(val, 'copy') else val  # type: ignore
     else:
         return immutable_config_values.copy()
 
 
 def factory(params: Dict) -> Any:
-    mod = importlib.import_module(params['module'])
+    path = []
+    if params.get('package'):
+        path.append(params['package'])
+    path.append(params['module'])
+    mod = importlib.import_module('.'.join(path))
     cl = params['class']
     del(params['module'])
     del(params['class'])
-    return mod[cl](**params)  # type: ignore
+    return getattr(mod, cl)(**params)
 
 
 if __name__ == "__main__":

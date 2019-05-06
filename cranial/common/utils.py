@@ -1,3 +1,4 @@
+import logging
 from typing import Callable, List
 
 
@@ -54,9 +55,9 @@ def dieIf(msg: str, fn: Callable, *args, **kwargs):
     """Wrap Exceptions in friendlier messages."""
     try:
         return fn(*args, **kwargs)
-    except Exception e:
-        logging.error('{}. Function: {}; Args: {}; Keywords: {}', 
-                      fn._name__,e, args, kwargs)
+    except Exception as e:
+        logging.error('{}. Function: {}; Args: {}; Keywords: {}',
+                      e, fn.__name__, args, kwargs)
         raise Exception(msg)
 
 
@@ -64,8 +65,8 @@ def warnIf(msg: str, fn: Callable, *args, **kwargs):
     """Transform exceptions into warnings."""
     try:
         return fn(*args, **kwargs)
-    except Exception e:
+    except Exception as e:
         logging.warn(e)
-        logging.warn('{}. Function: {}; Args: {}; Keywords: {}', 
-              msg, fn.__name__, args, kwargs)
+        logging.warn('{}. Function: {}; Args: {}; Keywords: {}',
+                     msg, fn.__name__, args, kwargs)
         return None
