@@ -7,7 +7,7 @@ from cranial.messaging import base
 
 class Notifier(base.Notifier):
     @staticmethod
-    def send(address, message, endpoint):
+    def send(self, address, message, endpoint):
         count = 0
         while count < 3:
             # @TODO This should just POST message, instead of using the
