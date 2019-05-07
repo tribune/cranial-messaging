@@ -1,8 +1,15 @@
-"""Usage: pipe.py [--config <file>] [<listener>] [<target>]
+#! /usr/bin/python3
+"""Usage: pipe.py [--debug] [--echo] [--response] [--ignore-empty] [--config <file>] \
+                  [<listener>] [<target>]
 
 Options:
+  --debug, -d                 Print config.
+  --echo, -e                  Print messages received.
+  --response, -r              If the target responds, print it.
+  --ignore-empty, -i          Don't send messages consisting of only whitespace.
   --config=<file>, -f=<file>  Config file.
 
+@TODO
 Config Example:
 listener: module=stdin
 target: module=httpget address=localhost:8000 endpoint=hello
@@ -17,6 +24,13 @@ import cranial.common.config as config
 from cranial.common.utils import dieIf, warnIf
 
 opts = docopt(__doc__)
+
+# Conventional syntax
+if opts.get('<listener>') == '-':
+    opts['<listener>'] = 'stdin://'
+
+if opts.get('<target>') == '-' or opts.get('<target>') is None:
+    opts['<target>'] = 'stdout://'
 
 if opts.get('-f'):
     dieIf("Couldn't load config", config.load,
@@ -38,15 +52,24 @@ target = dieIf("Target not properly configured", config.factory,
 
 sleep_time = config.get('sleep', 1)
 
+if opts['--debug']:
+    print(config.get())
+
 while True:
     try:
         message = listener.recv()
+        if config.get('echo', False):
+            print(message)
+        if config.get('ignore_empty') and message.strip() == '':
+            continue
     except StopIteration:
         break
     if message:
         logging.debug('Received Message: {}', message)
         send_params['message'] = message
         response = warnIf("Couldn't send", target.send, **send_params)
+        if response and config.get('response', False):
+            print(str(response))
         sleep_count = 0
     else:
         sleep(sleep_time)

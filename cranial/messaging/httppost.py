@@ -9,9 +9,10 @@ class Notifier(base.Notifier):
     @staticmethod
     def send(address, message, endpoint, **kwargs):
         count = 0
-        while count < 3:
-            response = requests.get('http://{}/{}/{}'.format(
-                address, endpoint, message.strip()))
+        # Don't send empty messages.
+        while count < 3 and message.strip() != '':
+            response = requests.post('http://{}/{}'.format(
+                address, endpoint), data=message)
             if response.status_code == requests.codes.ok:
                 try:
                     return response.json()

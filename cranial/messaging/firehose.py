@@ -6,7 +6,7 @@ class Notifier(base.Notifier):
     def __init__(self):
         self.client = firehose.get_client()
 
-    def send(self, address, message, endpoint):
+    def send(self, address, message, endpoint, **kwargs):
         self.firehose.put_record(DeliveryStreamName=endpoint,
                                  Record={'Data': bytes(message, 'utf8')})
         return True

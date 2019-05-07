@@ -28,7 +28,11 @@ class Notifier(metaclass=ABCMeta):
 
     # Optionally, @staticmethod
     @abstractmethod
-    def send(self, address: Optional[str], message: str, endpoint: Optional[str]):
+    def send(self,
+             address: Optional[str],
+             message: str,
+             endpoint: Optional[str],
+             **kwargs):
         return False
 
 
@@ -44,11 +48,13 @@ class Async_Wrapper(AsyncNotifier):
         self.results = {}  # type: Dict[str, bytes]
         self.notifier = notifier
 
-    def worker(self, address, message, endpoint):
-        self.results[address] = self.notifier.send(address, message, endpoint)
+    def worker(self, address, message, endpoint, kwargs):
+        self.results[address] = self.notifier.send(
+                address, message, endpoint, **kwargs)
 
-    def send(self, address, message, endpoint):
-        t = Thread(target=self.worker, args=(address, message, endpoint))
+    def send(self, address=None, message=None, endpoint=None, **kwargs):
+        t = Thread(
+              target=self.worker, args=(address, message, endpoint, kwargs))
         self.threads.append(t)
         t.start()
         return True
@@ -70,11 +76,12 @@ class Async_WrapperPool(AsyncNotifier):
         self.notifier = notifier
         self.pool = ThreadPoolExecutor(self.n_threads)
 
-    def send(self, address=None, message=None, endpoint=None):
+    def send(self, address=None, message=None, endpoint=None, **kwargs):
         f = self.pool.submit(self.notifier.send,
                              address=address,
                              message=message,
-                             endpoint=endpoint)
+                             endpoint=endpoint,
+                             **kwargs)
         self.futures.append(f)
         return True
 

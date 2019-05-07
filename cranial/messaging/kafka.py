@@ -36,7 +36,7 @@ class Notifier(base.Notifier):
     asynchronous. The send() method returns once the message is in the client's
     queue. The finish() method returns once the message has been delievered to a
     Kafka broker. So to be truly synchronous, the usage would be:
-        KAFKA_Notifier().send(
+        Notifier().send(
             address=None, message='Hello', endpoint='channel'
             ).finish()
 
@@ -50,7 +50,7 @@ class Notifier(base.Notifier):
     a Broker. If you are willing to risk lost messages in the case of a local
     machine crash or similar failure, then you can use the forms above.
 
-    >>> k = KAFKA_Notifier(client=MockKafkaProducer())
+    >>> k = Notifier(client=MockKafkaProducer())
     >>> result = k.send(None, 'foo', 'bar')
     >>> True if result else False
     True
@@ -66,16 +66,17 @@ class Notifier(base.Notifier):
     >>> def factory(proto):
     ...    return k
     ...
-    >>> m = Messenger(service_discovery=svc,
-    ...               protocol_discovery=proto,
-    ...               factory=factory)
+    >>> m = base.Messenger(service_discovery=svc,
+    ...                    protocol_discovery=proto,
+    ...                    factory=factory)
     ...
     >>> result = m.notify('value')
     key: value
     >>> True if result else False
     True
-    >>> m.notify('value2', wait=False)
-    True
+    >>> threads = m.notify('value2', wait=False)
+    >>> 'test' in threads and type(threads['test'])
+    <class 'kafka.Notifier'>
     """
 
     def __init__(self,
@@ -83,7 +84,7 @@ class Notifier(base.Notifier):
                  client: 'confluent_kafka.Producer' = None) -> None:
         self.client = client or get_reusable_kafka_producer(hosts_csv)
 
-    def send(self, address, message, endpoint):
+    def send(self, address, message, endpoint, **kwargs):
         """ Note `address` is ignored, since routing is handled by the
         kafka_client.
         """

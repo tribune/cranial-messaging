@@ -13,4 +13,4 @@ class Notifier(base.Notifier):
         if len(label):
             print("{}: {}".format(', '.join(label), message))
         else:
-            print(message)
+            print(message[:-1] if message[-1] == '\n' else message)
