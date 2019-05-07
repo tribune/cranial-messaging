@@ -16,6 +16,8 @@ Try:
     
     ``$ echo "- also means stdin" | ./cranial --response - httppost://httpbin.org/post``
     
+    ``$./cranial kafka://broker.a,broker.b/topic # stdout is the default``
+    
     ``$ ./cranial --json db://your.host/name/table?driver=psycopg2&id=id http://example.com/ # Coming soon.``
     
     ``$ ./cranial tweets://yourname:password@#someTag fb://yourname:password@ # Easy to implement.``
