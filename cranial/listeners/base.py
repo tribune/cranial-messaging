@@ -83,3 +83,30 @@ class Demo(RespondingListener):
 
     def resp(self, data, **kwargs):
         super().resp(bytes(self.res))
+
+
+def echo_process(Listener: RespondingListener, suffix=b'') -> str:
+    """
+    Starts a process running a Responding Listener that echoes what it is sent,
+    adding an optional suffix, until it receives the message 'exit'.
+
+    Used for testing.
+
+    Returns the address of the listener.
+    """
+    from cranial.common.utils import available_port
+    from concurrent.futures import ProcessPoolExecutor
+
+    threads = ProcessPoolExecutor()
+    port = available_port()
+    threads.submit(echo_responder, Listener, port, suffix)
+    return 'localhost:' + str(port)
+
+
+def echo_responder(Listener: RespondingListener, port, suffix=b''):
+    echo = Listener(port=port)
+    while True:
+        m = echo.recv()
+        echo.resp(m + suffix)
+        if m == b'exit':
+            return

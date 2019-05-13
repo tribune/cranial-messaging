@@ -24,11 +24,13 @@ def get_client(aws_keys: dict = None, new=False):
     firehose = boto3.client('firehose',
                             aws_access_key_id=aws_keys['key'],
                             aws_secret_access_key=aws_keys['secret'],
-                            region_name=aws_keys['region_name'])
+                            region_name=aws_keys['region_name']) if aws_keys \
+                                    else boto3.client('firehose')
     return firehose
 
 
 def put_data(stream: str, data):
+    """Encodes data if it's not already bytes & delivers it."""
     firehose = get_client()
 
     if type(data) is str:
@@ -45,13 +47,13 @@ def put_data(stream: str, data):
 
     record = {'Data': bits}
     try:
-        firehose.put_record(DeliveryStreamName=stream, Record=record)
+        return firehose.put_record(DeliveryStreamName=stream, Record=record)
     # Retry once in case of dead client.
     except Exception as first_err:
         log.warn(str(first_err))
         firehose = get_client(new=True)
         try:
-            firehose.put_record(DeliveryStreamName=stream, Record=record)
+            return firehose.put_record(DeliveryStreamName=stream, Record=record)
         except Exception as e:
             log.error(str(e))
             raise e
