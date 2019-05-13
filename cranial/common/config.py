@@ -76,11 +76,15 @@ def load_from_env(prefix: str) -> ConfigStore:
     for k, v in os.environ.items():
         if not k.startswith(prefix + '_'):
             continue
-        # Parse URLs.
+        # Parse URIs into factory parameters.
         if type(v) is str and '://' in str(v):
             config[k.upper() + '_STR'] = v
             parse = urllib.parse.urlparse(str(v))
-            d = {'module': parse.scheme,
+            # Most of the Python ecosystem breaks if you name a module 'http',
+            # so we use httpget.
+            mod = 'httpget' if parse.scheme == 'http' else parse.scheme
+
+            d = {'module': mod,
                  'address': parse.netloc,
                  'endpoint': parse.path[1:]}  # type: Dict[str, Any]
             if parse.query:
