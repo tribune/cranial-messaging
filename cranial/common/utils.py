@@ -1,5 +1,18 @@
 import logging
+import socket
 from typing import Callable, List
+
+
+def available_port():
+    """ Not without race conditions; another process could claim the port
+    between when you get the number and when you use it. This is intended for
+    testing; production code should probably use known, fixed port numbers.
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('localhost', 0))
+    addr, port = s.getsockname()
+    s.close()
+    return port
 
 
 def update_ordered_list(old: List, new: List) -> List:
