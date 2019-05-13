@@ -1,8 +1,6 @@
-# encoding: utf-8
 """
 Helper module for example applications. Mimics ZeroMQ Guide's zhelpers.h.
 """
-from __future__ import print_function
 
 import binascii
 import os
@@ -14,6 +12,7 @@ import zmq
 from cranial.common import logger
 
 log = logger.get('ZMQ_LOGLEVEL')
+default_context = zmq.Context.instance()
 
 
 def socket_set_hwm(socket, hwm=-1):
@@ -44,15 +43,17 @@ def set_id(zsocket):
     """Set simple random printable identity on socket"""
     identity = u"%04x-%04x" % (randint(0, 0x10000), randint(0, 0x10000))
     zsocket.setsockopt_string(zmq.IDENTITY, identity)
+    return identity
 
 
-def zpipe(ctx):
+def zpipe(ctx=None):
     """build inproc pipe for talking to threads
 
     mimic pipe used in czmq zthread_fork.
 
     Returns a pair of PAIRs connected via inproc
     """
+    ctx = ctx or default_context
     a = ctx.socket(zmq.PAIR)
     b = ctx.socket(zmq.PAIR)
     a.linger = b.linger = 0
@@ -63,29 +64,41 @@ def zpipe(ctx):
     return a, b
 
 
-def send_string(s: str, host: str, wait=True, encoding='utf-8') -> str:
-    context = zmq.Context.instance()
+def send_string(s: str, host: str,
+                wait=True, encoding='utf-8', ctx=None) -> str:
+    """
+    >>> from cranial.listeners.zmq import Listener
+    >>> from cranial.listeners.base import echo_process
+    >>> addr = echo_process(Listener, b'Bar')
+    >>> assert(send_string('Foo', addr, wait=False) == '')
+    >>> send_string('Foo', addr)
+    'FooBar'
+    >>> res = [str(i) + 'Bar' for i in range(0,9)]
+    >>> assert(res == [send_string(str(i), addr) for i in range(0,9)])
+    >>> assert(send_string('exit', addr, wait=False) == '')
+    """
+    context = ctx or default_context
     client = context.socket(zmq.REQ)
     set_id(client)
     client.connect("tcp://" + host)
 
-    msg = s if type(s) is bytes else bytes(s, 'encoding')
+    msg = s if type(s) is bytes else bytes(s, encoding)
     client.send(msg)
-    response = ''
     if wait:
-        response = client.recv().decode(encoding, 'ignore')
-    return response
+        return client.recv().decode(encoding, 'replace')
+    else:
+        return ''
 
 
-def get_client(port=5678, host='localhost'):
-    context = zmq.Context.instance()
+def get_client(port=5678, host='localhost', ctx=None):
+    context = ctx or default_context
     client = context.socket(zmq.REQ)
     set_id(client)
     client.connect("tcp://{}:{}".format(host, port))
     return client
 
 
-def client_send_request(client, msg) -> str:
+def client_send_request(client, msg) -> bytes:
     """Probably you should be using send_string() instead of this
     function."""
     msg = msg if type(msg) is bytes else bytes(msg, 'utf-8')
@@ -93,9 +106,14 @@ def client_send_request(client, msg) -> str:
     start = time()
     resp = client.recv()
     end = time()
-    log.debug(resp.decode('utf-8'))
+    log.debug(resp.decode('utf-8', 'replace'))
 
     t = end - start
     log.debug("Time: {:.3f}".format(t))
 
-    return resp.decode('utf-8')
+    return resp
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
