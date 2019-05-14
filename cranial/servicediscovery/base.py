@@ -3,6 +3,9 @@ from typing import Any, Dict, List, Union  # noqa
 
 import yaml
 
+from cranial.common.config import parse_uri, factory
+from cranial.listeners.base import Listener  # noqa
+
 ServiceName = str
 ServiceValue = Union[str, List[str]]
 ServiceDefinition = Dict[str, ServiceValue]
@@ -36,7 +39,16 @@ class Discovery(metaclass=ABCMeta):
         return mode  # type: ignore
 
 
-class YamlDiscovery(Discovery):
+class YamlFileDiscovery(Discovery):
     def update(self):
         with open(self.namespace) as f:
             self.services = yaml.full_load(f)
+
+
+class YamlListenerDiscovery(Discovery):
+    def update(self):
+        if not hasattr(self, 'listener'):
+            params = {'package': 'cranial.listeners', 'class': 'Listener'}
+            params.update(parse_uri(self.namespace))
+            self.listener = factory(params)  # type: Listener
+        self.services = yaml.full_load(self.listener.recv())
