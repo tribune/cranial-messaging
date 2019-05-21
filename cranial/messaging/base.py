@@ -3,7 +3,7 @@
 """
 
 from abc import ABCMeta, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import Executor, ThreadPoolExecutor
 import importlib
 from random import randint
 import tempfile
@@ -12,6 +12,7 @@ from time import time
 from typing import Any, Dict, List, IO, Optional, TYPE_CHECKING  # noqa
 
 from cranial.common import logger
+import cranial.servicediscovery.base
 from cranial.servicediscovery import marathon
 
 
@@ -127,7 +128,8 @@ class Messenger():
         ----------
 
         endpoint:
-            string. Passed to Notifier.send().
+            string. Passed to Notifier.send(). @TODO Registered services should
+            be able to override.
 
         label:
             string. Passed to service_discovery() and protocol_discovery().
@@ -237,7 +239,7 @@ class Messenger():
             notifier = self.get_notifier_for_service(svc)
             threads[svc] = notifier
             log.debug(
-                'Attempt notify to "any" {}, chosen instance {} via {}.'.format(
+              'Attempt notify to "any" {}, chosen instance {} via {}.'.format(
                     svc, instances[i], type(notifier)))
 
             # I don't like this ugly hack for Kafka. :-(
@@ -311,6 +313,27 @@ class LocalMessenger(Messenger):
         self.opts = {}
         tmpdir = tempfile.mkdtemp()
         self.services = lambda _: {'all': {'local': [tmpdir]}}
-        self.protocols = lambda _: {'AsyncLocalDisk' if not wait else 'LocalDisk':
+        self.protocols = lambda _: {'LocalDisk' if wait else 'AsyncLocalDisk':
                                     self.services('NA')['all']}
         self.factory = lambda _: default_factory('localdisk')
+
+
+class MessengerExecutor(Executor):
+    def __init__(self,
+                 label='worker_pool',
+                 discovery: cranial.servicediscovery.base.Discovery = None) -> None:
+        pass
+
+    def submit(self, fn, *args, **kwargs):
+        # WIP
+        pass
+
+    def _my_map(self, func, *iterables, timeout=None, chunksize=1):
+        for i in range(0, len(iterables[0])):
+            args = []
+            for a in iterables:
+                try:
+                    args.append(a[i])
+                except KeyError:
+                    break
+            self.submit(func, *args)
