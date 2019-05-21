@@ -5,7 +5,7 @@ from cranial.messaging import base
 
 
 def parts_to_path(address, endpoint):
-    """ Provides URI string based configurability, per cranial.common.config 
+    """ Provides URI string based configurability, per cranial.common.config
 
     file:///foo/bar is absolute;
     file://./foo/bar is relative.
