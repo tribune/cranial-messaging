@@ -117,7 +117,7 @@ ServiceName = str
 
 class Messenger():
     time = 0
-    sent_success = set()  # type: Set[Tuple[List, str, str]]
+    sent_success = set()  # type: Set[Tuple[str, str, str]]
 
     def __init__(
           self,
@@ -228,7 +228,7 @@ class Messenger():
         # to send the mesage more than once.
         # To best support this, all services that rely on distributed brokers
         # should register with the same host or set of hosts.
-        delivery = (sorted(instances), message, self.endpoint)
+        delivery = (','.join(sorted(instances)), message, self.endpoint)
         if delivery in self.sent_success:
             return {}, []
         else:
@@ -257,7 +257,7 @@ class LocalMessenger(Messenger):
 
     >>> import tempfile
     >>> d = tempfile.mkdtemp()
-    >>> m = LocalMessenger(endpoint=d+'/log')
+    >>> m = LocalMessenger(endpoint=d+'/log', mode='any')
     >>> m.notify('hello')
     True
     >>> m.notify('world')
@@ -266,15 +266,25 @@ class LocalMessenger(Messenger):
     ...     fh.readlines()
     ...
     ['hello\\n', 'world\\n']
+    >>> d = tempfile.mkdtemp()
+    >>> # A hack to test 'all' mode by writing to the same log file twice.
+    >>> m = LocalMessenger(endpoint=d+'/log', mode='all', hosts=['/','/'])
+    >>> m.notify('hello')
+    True
+    >>> with open(d+'/log') as fh:
+    ...     fh.readlines()
+    ...
+    ['hello\\n', 'hello\\n']
     """
 
-    def __init__(self, endpoint='log', wait=True,
+    def __init__(self, endpoint='log', wait=True, mode='all', hosts=None,
                  *args, **kwargs):
+        hosts = hosts or ['localhost']
         self.endpoint = endpoint
         self.discovery = sd.PythonDiscovery({'local': {
-            'hosts': ['localhost'],
+            'hosts': hosts,
             'protocol': 'File' if wait else 'AsyncFile',
-            'mode': 'all'}})
+            'mode': mode}})
         self.factory = default_factory
 
 
