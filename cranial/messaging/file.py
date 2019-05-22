@@ -12,7 +12,6 @@ def parts_to_path(address, endpoint):
     file:///foo/bar is absolute;
     file://./foo/bar is relative.
     """
-    log.debug([address, endpoint])
     if address in [None, '', 'localhost', '127.0.0.1', '/']:
         endpoint = '/' + endpoint
     elif address != '.':
@@ -33,6 +32,7 @@ class Notifier(base.Notifier):
 
     def send(self, address, message, endpoint, **kwargs):
         endpoint = parts_to_path(address, endpoint)
+        log.debug('Writing to file: {}'.format(endpoint))
         if type(message) is str:
             message = message.encode('utf-8')
         try:

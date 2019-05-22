@@ -217,8 +217,8 @@ class Messenger():
         notifier = self.get_notifier_for_service(svc)
         threads[svc] = notifier
         log.debug(
-          'Attempt notify to "any" {}, chosen instance {} via {}.'.format(
-                svc, instances[i], type(notifier)))
+          'Attempt to notify "any" "{}", instance "{}" via {} at "{}".'.format(
+                svc, instances[i], type(notifier), self.endpoint))
 
         # @TODO Most notifiers should pick local if possible?
         target = instances[i]
@@ -266,25 +266,37 @@ class LocalMessenger(Messenger):
     ...     fh.readlines()
     ...
     ['hello\\n', 'world\\n']
-    >>> d = tempfile.mkdtemp()
     >>> # A hack to test 'all' mode by writing to the same log file twice.
-    >>> m = LocalMessenger(endpoint=d+'/log', mode='all', hosts=['/','/'])
+    >>> m = LocalMessenger(endpoint=d+'/log1', mode='all', hosts=['/','/'])
     >>> m.notify('hello')
     True
-    >>> with open(d+'/log') as fh:
+    >>> with open(d+'/log1') as fh:
     ...     fh.readlines()
     ...
     ['hello\\n', 'hello\\n']
+    >>> # Test that we don't duplicate to the same destinations.
+    >>> dupe = {'dupe': {'hosts': ['localhost'], 'protocol': 'AsyncFile',
+    ...                  'mode': 'any'}}
+    >>> m = LocalMessenger(endpoint=d+'/log2', mode='any', extra_svcs=dupe)
+    >>> m.notify('hello')
+    True
+    >>> with open(d+'/log2') as fh:
+    ...     fh.readlines()
+    ...
+    ['hello\\n']
     """
 
-    def __init__(self, endpoint='log', wait=True, mode='all', hosts=None,
-                 *args, **kwargs):
+    def __init__(self, endpoint='log', wait=True,
+                 mode='all', hosts=None, extra_svcs: Dict = None,
+                 *args, **kwargs) -> None:
         hosts = hosts or ['localhost']
         self.endpoint = endpoint
-        self.discovery = sd.PythonDiscovery({'local': {
+        services = {'local': {
             'hosts': hosts,
             'protocol': 'File' if wait else 'AsyncFile',
-            'mode': mode}})
+            'mode': mode}}
+        services.update(extra_svcs or {})
+        self.discovery = sd.PythonDiscovery(services)
         self.factory = default_factory
 
 
