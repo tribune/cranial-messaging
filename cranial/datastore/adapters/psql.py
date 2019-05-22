@@ -75,21 +75,47 @@ def get_credentials(pgpass='~/.pgpass', append=False):
     return credentials
 
 
-def get_cursor(credentials_file='~/.pgpass', **kwargs):
+def find_credentials(credentials_file='~/.pgpass', **kwargs) -> Dict[str, str]:
+    """
+    Returns the first credentials from pgpass that contain all the values
+    passed in.
+
+    Supported Parameters:
+      host, port, dbname, user, password
+
+    >>> from tempfile import mkstemp
+    >>> _, path = mkstemp()
+    >>> f = open(path, 'w')
+    >>> _ = f.write("myhost:myport:mydbname:myname:mypass\\n")
+    >>> _ = f.write("byhost:byport:bydbname:byname:bypass")
+    >>> f.close()
+    >>> assert(find_credentials(path, user='myname')['password'] == 'mypass')
+    >>> assert(find_credentials(path, dbname='bydbname')['user'] == 'byname')
+    >>> assert(find_credentials(path, host='not-host'))
+    Traceback (most recent call last):
+    ...
+    Exception: No such credentials available.
+    """
     creds = get_credentials(credentials_file)
     for key, value in kwargs.items():
-        creds = filter(lambda x: x.get(key) == value, creds)
-    
-    c = next(creds)
-    if not c:
+        if value:
+            creds = list(filter(lambda x: x.get(key) == value, creds))
+
+    if len(creds) == 0:
         raise Exception('No such credentials available.')
 
+    return creds[0]
+
+
+def get_cursor(credentials_file='~/.pgpass', **kwargs):
+    c = find_credentials(credentials_file, **kwargs)
     return SingleCursorDatabaseConnector(c['dbname'], c['host'], c['port'],
-            c['user'], c['password'])
+                                         c['user'], c['password'])
+
 
 def query(q: str, credentials_file='.pgpass'):
     '''
-    Execute a query in redshift
+    Execute a query in redshift/postgres.
 
     Parameters
     ----------
@@ -199,6 +225,9 @@ class SingleCursorDatabaseConnector(object):
 
     def fetchall(self):
         return self._get_cursor().fetchall()
+
+    def __getattr__(self, name):
+        return getattr(self._get_cursor(), name)
 
     def __iter__(self):
         return self._get_cursor()
