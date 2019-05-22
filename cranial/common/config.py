@@ -142,12 +142,11 @@ def get(key=None, default=None) -> Union[ConfigStore, ConfigValue]:
 
 
 def factory(params: Dict) -> Any:
-    path = []
     if params.get('package'):
-        path.append(params['package'])
-    path.append(params['module'])
-    mod = importlib.import_module('.'.join(path))
+        params['module'] = '.'.join([params['package'], params['module']])
+    mod = importlib.import_module(params['module'])
     cl = params['class']
+    del(params['package'])
     del(params['module'])
     del(params['class'])
     return getattr(mod, cl)(**params)
