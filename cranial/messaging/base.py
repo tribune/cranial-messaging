@@ -6,13 +6,12 @@ from abc import ABCMeta, abstractmethod
 from concurrent.futures import Executor, ThreadPoolExecutor
 import importlib
 from random import randint
-import tempfile
 from threading import Thread
 from time import time
-from typing import Any, Dict, List, IO, Optional, TYPE_CHECKING  # noqa
+from typing import Any, Dict, List, IO, Optional, Set, Tuple, TYPE_CHECKING  # noqa
 
 from cranial.common import logger
-import cranial.servicediscovery.base
+import cranial.servicediscovery.base as sd
 from cranial.servicediscovery import marathon
 
 
@@ -113,154 +112,63 @@ def default_factory(proto: str) -> Notifier:
     return notifier
 
 
+ServiceName = str
+
+
 class Messenger():
-    """ @TODO Switch to cranial.servicediscovery"""
+    time = 0
+    sent_success = set()  # type: Set[Tuple[List, str, str]]
 
-    def __init__(self, endpoint='key', label='CONTENT_PROCESSOR',
-                 opts={'DEPRECATED': 1},
-                 # service_discovery: Discovery = marathon.Discovery,
-                 service_discovery=None,
-                 protocol_discovery=None,
-                 factory=None):
+    def __init__(
+          self,
+          endpoint: str = 'key',
+          discovery: sd.Discovery = None,
+          factory=None, **kwargs) -> None:
         """
-
         Parameters
         ----------
 
         endpoint:
-            string. Passed to Notifier.send(). @TODO Registered services should
-            be able to override.
+            Passed to Notifier.send(). @TODO Registered services should
+            be able to override?
 
-        label:
-            string. Passed to service_discovery() and protocol_discovery().
-
-        opts:
-            dict. As produced by docopt. Uses '--local' to override
-            service discovery. @DEPRECATED
-
-        service_discovery:
-            A function that accepts 'label' and returns a dictionary of the
-            form:
-                {'any': {'$service_id': ['$host_ip:$port', ...], ...},
-                 'all': {'$service_id': ['$host_ip:$port', ...], ...}}
-
-        protocol_discovery:
-            Deprecated. Will be part of new ServiceDiscovery object metadata.
-            A function that accepts 'label' and returns a dictionary of the
-            form:
-                {'http': {'$service_id': ['$host_ip:$port', ...], ...},
-                 'kafka': {'$service_id': ['$host_ip:$port', ...], ...},
-                 ...}
+        discovery:
+            cranial.servicediscovery.base.Discovery
 
         factory:
             A function that takes a protocol string and returns a Notifier().
-
         """
         self.endpoint = endpoint
-        self.label = label
-        self.hosts = {'time': 0}  # type: Dict[str, Any]
-        self.opts = opts
-        self.services = service_discovery or marathon.get_tasks_by_label
-        self.protocols = protocol_discovery if protocol_discovery \
-            else lambda _: marathon.get_tasks_by_label('NOTIFIER')
+        self.discovery = discovery or marathon.Discovery('CONTENT_PROCESSOR')
+        self.update_consumers()
         self.factory = factory if factory else default_factory
 
     def get_notifier_for_service(self, svc) -> Notifier:
-        registry = self.hosts['data']['protocols']
-        proto = None
-        for p in registry:
-            if svc in registry[p]:
-                proto = p
-                break
-        proto = proto or 'kafka'
-
+        # @TODO Create a Notifier Pool so we can reuse them?
+        proto = self.discovery.get_protocol(svc)
         return self.factory(proto)
 
     def update_consumers(self):
-        # Don't spam the service discovery.
-        if time() - self.hosts['time'] < .5:
-            return
-        if self.opts.get('--local'):
-            port = self.opts.get('PORT', '5000')
-            mtype = self.opts.get('TYPE', 'httpget')
-            self.hosts = {'time': time(),
-                          'data': {'all': {'local': ['localhost:' + port]},
-                                   'any': {},
-                                   'protocols': {mtype: 'local'}
-                                   },
-                          }
-        else:
-            self.hosts['time'] = time()
-            self.hosts['data'] = self.services(self.label)
-            self.hosts['data']['protocols'] = self.protocols(self.label)
+        self.discovery.update()
+        self.time = time()
 
-        log.debug(self.hosts)
-
-    def new_notify(self, message, wait=True):
-        raise Exception('WIP. Nothing should be calling this yet.')
-        # Scaffolding for new ServiceDiscovery-based notifications.
-        results = {}
-        for svc in self.discovery.services:
-            if self.discovery.get_metadata(svc, self.label) == 'all':
-                results[svc] = self.notify_all(svc)
-            else:
-                results[svc] = self.notify_any(svc)
-
-        return results
-
-    def notify(self, message: str, wait=True):
+    def notify(self, message, wait=True):
         # Update hosts every 5 minutes, regardless.
-        if time() - self.hosts['time'] > 300:
+        if time() - self.time > 300:
             self.update_consumers()
 
-        failed = set()
-        threads = {}
-        # Mode: all.
-        for svc, instances in self.hosts['data'].get('all', {}).items():
-            if len(instances) == 0:
-                continue
-            notifier = self.get_notifier_for_service(svc)
-            threads[svc] = notifier
-            for inst in instances:
-                log.debug(
-                    'Attempt notify to "all" {}, instance {} via {}.'.format(
-                        svc, inst, type(notifier)))
-                success = notifier.send(inst, message, self.endpoint)
-                if not success:
-                    self.update_consumers()
-                    failed.add(svc)
-
-        # Mode: any.
-        sent_kafka = False
-        for svc, instances in self.hosts['data'].get('any', {}).items():
-            if len(instances) == 0:
-                continue
-            i = randint(0, len(instances) - 1)
-            notifier = self.get_notifier_for_service(svc)
-            threads[svc] = notifier
-            log.debug(
-              'Attempt notify to "any" {}, chosen instance {} via {}.'.format(
-                    svc, instances[i], type(notifier)))
-
-            # I don't like this ugly hack for Kafka. :-(
-            # We should use service meta-data for a service to declare
-            # what modes it supports. ServiceDiscovery should solve this. @TODO
-            if notifier.__module__ == 'kafka':
-                if sent_kafka:
-                    continue
-                else:
-                    success = notifier.send(None, message, self.endpoint)
-                    sent_kafka = success
+        threads = {}  # type: Dict[ServiceName, Notifier]
+        failed = []  # type: List[ServiceName]
+        for svc in self.discovery.services:
+            if self.discovery.get_mode(svc) == 'all':
+                t, f = self.notify_all(svc, message)
             else:
-                # @TODO Most notifiers should pick local if possible?
-                success = notifier.send(instances[i], message, self.endpoint)
+                t, f = self.notify_any(svc, message)
+            threads.update(t)
+            failed.extend(f)
 
-            if not success:
-                self.update_consumers()
-                alt = instances[i - 1] if i > 0 else instances[-1]
-                success = notifier.send(alt, message, self.endpoint)
-            if not success:
-                failed.add(svc)
+        # Reset cache of delieveries.
+        self.sent_success = set()
 
         # Mode: close? only-local?
         # @TODO Notify local instance, if possible.
@@ -273,7 +181,7 @@ class Messenger():
                 if hasattr(notifier, 'finish'):
                     fails = notifier.finish()  # type: ignore
                     if fails and len(fails) > 0:
-                        failed.add('{svc}({hosts})'.format(
+                        failed.append('{svc}({hosts})'.format(
                             svc=svc, hosts=','.join(fails)))
 
         if len(failed) > 0:
@@ -281,6 +189,61 @@ class Messenger():
             raise NotifyException('Failed to notify services/hosts: ' +
                                   ' '.join(failed))
         return wait or threads
+
+    def notify_all(self, svc, message: str) -> Tuple[Dict, List]:
+        threads = {}  # type: Dict[ServiceName, Notifier]
+        failed = []  # type: List[ServiceName]
+        for inst in self.discovery.get_instances(svc):
+            notifier = self.get_notifier_for_service(svc)
+            threads[svc] = notifier
+            log.debug(
+                'Attempt notify to "all" {}, instance {} via {}.'.format(
+                    svc, inst, type(notifier)))
+            success = notifier.send(inst, message, self.endpoint)
+            if not success:
+                self.update_consumers()
+                failed.append(svc)
+        return threads, failed
+
+    def notify_any(self, svc, message: str) -> Tuple[Dict, List]:
+        threads = {}  # type: Dict[ServiceName, Notifier]
+        failed = []  # type: List[ServiceName]
+
+        instances = self.discovery.get_instances(svc)
+        if len(instances) == 0:
+            return threads, failed
+        # @TODO Accept optional Instance Selection function.
+        i = randint(0, len(instances) - 1)
+        notifier = self.get_notifier_for_service(svc)
+        threads[svc] = notifier
+        log.debug(
+          'Attempt notify to "any" {}, chosen instance {} via {}.'.format(
+                svc, instances[i], type(notifier)))
+
+        # @TODO Most notifiers should pick local if possible?
+        target = instances[i]
+
+        # Sometimes multiple subscribed services will use the same address
+        # and endpoint, e.g., a Kafka broker. In this case, we don't want
+        # to send the mesage more than once.
+        # To best support this, all services that rely on distributed brokers
+        # should register with the same host or set of hosts.
+        delivery = (sorted(instances), message, self.endpoint)
+        if delivery in self.sent_success:
+            return {}, []
+        else:
+            success = notifier.send(target, message, self.endpoint)
+
+        if not success:
+            self.update_consumers()
+            target = instances[i - 1] if i > 0 else instances[-1]
+            success = notifier.send(target, message, self.endpoint)
+        if not success:
+            failed.append(svc)
+        else:
+            self.sent_success.add(delivery)
+
+        return threads, failed
 
 
 class LocalMessenger(Messenger):
@@ -290,7 +253,7 @@ class LocalMessenger(Messenger):
     This class exists for:
         1. Debugging usage
         2. An example of sub-classing Messenger
-        3. Testing Messenger via the following doctest.
+        3. Testing Messenger and file.Notifier via the following doctest.
 
     >>> import tempfile
     >>> d = tempfile.mkdtemp()
@@ -308,20 +271,17 @@ class LocalMessenger(Messenger):
     def __init__(self, endpoint='log', wait=True,
                  *args, **kwargs):
         self.endpoint = endpoint
-        self.label = 'NA'
-        self.hosts = {'time': 0}
-        self.opts = {}
-        tmpdir = tempfile.mkdtemp()
-        self.services = lambda _: {'all': {'local': [tmpdir]}}
-        self.protocols = lambda _: {'LocalDisk' if wait else 'AsyncLocalDisk':
-                                    self.services('NA')['all']}
-        self.factory = lambda _: default_factory('localdisk')
+        self.discovery = sd.PythonDiscovery({'local': {
+            'hosts': ['localhost'],
+            'protocol': 'File' if wait else 'AsyncFile',
+            'mode': 'all'}})
+        self.factory = default_factory
 
 
 class MessengerExecutor(Executor):
     def __init__(self,
                  label='worker_pool',
-                 discovery: cranial.servicediscovery.base.Discovery = None) -> None:
+                 discovery: sd.Discovery = None) -> None:
         pass
 
     def submit(self, fn, *args, **kwargs):

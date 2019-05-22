@@ -1,18 +1,16 @@
-"""
-@deprecated. To be replaced with a class inherited from
-base.ServiceDiscovery().
-"""
 import requests
-from typing import Callable, Dict, List, Optional  # noqa
+from time import time
+from typing import Any, Callable, Dict, List, Optional  # noqa
 
 from cranial.common import logger
+from cranial.servicediscovery import base
 
 log = logger.get()
 
 MARATHON_URL = 'http://marathon.mesos:8080/v2/apps'
 
 
-def get_services_with_predicate(predicate: Callable) -> Optional[List]:
+def get_services_with_predicate(predicate: Callable) -> List:
     """Return a list of all Marathon Services that satisfy the predicate."""
     response = requests.get(MARATHON_URL)
     if response.status_code == requests.codes.ok:
@@ -23,7 +21,7 @@ def get_services_with_predicate(predicate: Callable) -> Optional[List]:
     else:
         if log:
             log.warn('Bad response from Marathon Service Discovery.')
-        return None
+        return []
 
 
 def get_tasks_for_service(service_id: str, portIndex: int = 0) -> List[str]:
@@ -96,3 +94,34 @@ def get_service_port(hostname: str, port_only=False):
     srvname = '.'.join(['_' + parts[0]] + ['_tcp'] + parts[1:])
     port = dns.resolver.query(srvname, 'SRV')[0].port
     return port if port_only else '{}:{}'.format(hostname, port)
+
+
+class Discovery(base.Discovery):
+    time = 0
+
+    def update(self):
+        # Don't spam the service discovery.
+        if time() - self.time < .5:
+            return
+
+        self.time = time()
+        services = get_services_with_predicate(
+          lambda x: self.namespace in x['labels'].keys())
+        for s in services:
+            response = requests.get(MARATHON_URL + s.id)
+            app = response.json()['app']
+            mode = app['labels'][self.namespace]
+            proto = app['labels'].get('NOTIFIER', 'kafka')
+            self.services[s.id] = {'mode': mode,
+                                   'protocol': proto,
+                                   'hosts': []}
+            for task in app['tasks']:
+                address = task['host']
+                # @TODO fix this hack for rabbitmq.
+                if s == '/rabbitmq':
+                    address += ':5672'
+                elif len(task.get('ports', [])):
+                    address += ':' + str(task['ports'][0])
+                self.services[s.id]['hosts'].append(address)
+
+        log.debug(self.services)

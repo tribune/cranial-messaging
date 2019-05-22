@@ -13,6 +13,15 @@ ServiceRegistry = Dict[ServiceName, ServiceDefinition]
 
 
 class Discovery(metaclass=ABCMeta):
+    """Maintains a `services` attribute as:
+        {service_name: {
+            hosts: ['a.host', 'b.host'],
+            protocol: 'http',
+            mode: '(any|all)'},
+         another_service: ...,
+         ...
+        }
+    """
     def __init__(self, namespace: str) -> None:
         self.namespace = namespace
         self.prefix = self.namespace  # Backward compatibility.
@@ -20,7 +29,7 @@ class Discovery(metaclass=ABCMeta):
         self.update()
 
     @abstractmethod
-    def update(self):
+    def update(self) -> None:
         raise Exception('Not Implemented')
 
     def get_metadata(self, service: str, key: str) -> ServiceValue:
@@ -37,6 +46,11 @@ class Discovery(metaclass=ABCMeta):
         mode = self.get_metadata(service, 'mode')
         assert mode in ['any', 'all']
         return mode  # type: ignore
+
+
+class PythonDiscovery(Discovery):
+    def update(self):
+        self.services = self.namespace
 
 
 class YamlFileDiscovery(Discovery):
