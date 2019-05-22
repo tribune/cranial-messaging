@@ -60,7 +60,7 @@ standardized ways.
 A slide deck with detailed diagrams of Cranial architecture can be found here:
 https://docs.google.com/presentation/d/131RK79w-Ls7uKuQocDcyEBXWDWABv6fXpaK_1THBG2Y/edit?usp=sharing
 
-The Craial Ontology is now formalized in OWL.
+The Cranial Ontology is now formalized in OWL.
 Canonical: http://ld.chapmanmedia.com/cranial
 Github: https://github.com/tribune/cranial-common/blob/master/ontology/cranial
 
