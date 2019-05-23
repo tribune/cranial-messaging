@@ -187,7 +187,7 @@ class Messenger():
         if len(failed) > 0:
             log.warn('Failed Notifications: {}'.format(failed))
             raise NotifyException('Failed to notify services/hosts: ' +
-                                  ' '.join(failed))
+                                  ', '.join(failed))
         return wait or threads
 
     def notify_all(self, svc, message: str) -> Tuple[Dict, List]:
@@ -311,6 +311,7 @@ class MessengerExecutor(Executor):
         pass
 
     def _my_map(self, func, *iterables, timeout=None, chunksize=1):
+        futures = []
         for i in range(0, len(iterables[0])):
             args = []
             for a in iterables:
@@ -318,4 +319,4 @@ class MessengerExecutor(Executor):
                     args.append(a[i])
                 except KeyError:
                     break
-            self.submit(func, *args)
+            futures.append(self.submit(func, *args))

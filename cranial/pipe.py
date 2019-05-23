@@ -1,9 +1,8 @@
 #! /usr/bin/python3
-"""Usage: pipe.py [--debug] [--echo] [--response] [--ignore-empty] [--config <file>] \
-                  [<listener>] [<target>]
+"""Usage: pipe.py [--debug] [--echo] [--response] [--ignore-empty] \
+                  [--config <file>] [<listener>] [<target>]
 
 Options:
-  --debug, -d                 Print config.
   --echo, -e                  Print messages received.
   --response, -r              If the target responds, print it.
   --ignore-empty, -i          Don't send messages consisting of only whitespace.
@@ -13,15 +12,19 @@ Options:
 Config Example:
 listener: module=stdin
 target: module=httpget address=localhost:8000 endpoint=hello
+sleep: 10
 """
 
-import logging
+import json
 from time import sleep
 
 from docopt import docopt
 
 import cranial.common.config as config
+import cranial.common.logger as logger
 from cranial.common.utils import dieIf, warnIf
+
+logging = logger.get()
 
 opts = docopt(__doc__)
 
@@ -58,16 +61,21 @@ if opts['--debug']:
 while True:
     try:
         message = listener.recv()
+        if type(message) not in [str, bytes]:
+            msgstr = json.dumps(message)
+        else:
+            msgstr = str(message)
         if config.get('echo', False):
             print(message)
-        if config.get('ignore_empty') and message.strip() == '':
+        if config.get('ignore_empty', True) and msgstr.strip() == '':
             continue
     except StopIteration:
         break
     if message:
-        logging.debug('Received Message: {}', message)
+        logging.debug('Received Message: %s', message)
         send_params['message'] = message
-        response = warnIf("Couldn't send", target.send, **send_params)
+        # response = warnIf("Couldn't send", target.send, **send_params)
+        response = target.send(**send_params)
         if response and config.get('response', False):
             print(str(response))
         sleep_count = 0
@@ -75,5 +83,5 @@ while True:
         sleep(sleep_time)
         sleep_count += 1
         if sleep_count % 5 == 0:
-            logging.debug("No messages for {} seconds",
+            logging.debug("No messages for %s seconds",
                           sleep_count * sleep_time)

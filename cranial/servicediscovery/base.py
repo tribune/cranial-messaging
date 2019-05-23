@@ -65,4 +65,6 @@ class YamlListenerDiscovery(Discovery):
             params = {'package': 'cranial.listeners', 'class': 'Listener'}
             params.update(parse_uri(self.namespace))
             self.listener = factory(params)  # type: Listener
-        self.services = yaml.full_load(self.listener.recv())
+        msg = self.listener.recv()
+        if msg:
+            self.services = yaml.full_load(msg)

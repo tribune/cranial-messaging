@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Dict, IO  #noqa
 
@@ -6,7 +7,8 @@ from cranial.common import logger
 
 log = logger.get()
 
-def parts_to_path(address, endpoint):
+
+def parts_to_path(address: str, endpoint: str) -> str:
     """ Provides URI string based configurability, per cranial.common.config
 
     file:///foo/bar is absolute;
@@ -30,11 +32,13 @@ class Notifier(base.Notifier):
     """
     logfiles = {}  # type: Dict[str, IO]
 
-    def send(self, address, message, endpoint, **kwargs):
+    def send(self, address, message, endpoint, serde=json, **kwargs):
         endpoint = parts_to_path(address, endpoint)
         log.debug('Writing to file: {}'.format(endpoint))
         if type(message) is str:
             message = message.encode('utf-8')
+        elif type(message) != bytes:
+            message = serde.dumps(message).encode('utf-8')
         try:
             if endpoint not in self.logfiles.keys() \
                     or self.logfiles[endpoint].closed:
