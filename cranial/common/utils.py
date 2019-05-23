@@ -69,7 +69,7 @@ def dieIf(msg: str, fn: Callable, *args, **kwargs):
     try:
         return fn(*args, **kwargs)
     except Exception as e:
-        logging.error('{}. Function: {}; Args: {}; Keywords: {}',
+        logging.error('%s. Function: %s; Args: %s; Keywords: %s',
                       e, fn.__name__, args, kwargs)
         raise Exception(msg)
 
@@ -80,6 +80,7 @@ def warnIf(msg: str, fn: Callable, *args, **kwargs):
         return fn(*args, **kwargs)
     except Exception as e:
         logging.warn(e)
-        logging.warn('{}. Function: {}; Args: {}; Keywords: {}',
+        logging.warn('%s. Function: %s; Args: %s; Keywords: %s',
                      msg, fn.__name__, args, kwargs)
+        raise e
         return None

@@ -53,6 +53,27 @@ def opts2env(opts: Dict[str, str], prefix: str) -> None:
             os.environ[name] = '1' if v is True else str(v)
 
 
+def parse_uri(s: str) -> Dict:
+    """Parse URIs into factory parameters."""
+    parse = urllib.parse.urlparse(str(s))
+    # Most of the Python ecosystem breaks if you name a module 'http',
+    # so we use httpget.
+    mod = 'httpget' if parse.scheme == 'http' else parse.scheme
+
+    d = {'module': mod,
+         'address': parse.netloc,
+         'endpoint': parse.path[1:]}  # type: Dict[str, Any]
+    if parse.username:
+        d['user'] = parse.username
+    if parse.password:
+        d['password'] = parse.password
+    if parse.query:
+        q = urllib.parse.parse_qs(parse.query)
+        d.update({k: i[0] if len(i) < 2 else i
+                 for k, i in q.items()})
+    return d
+
+
 def load_from_env(prefix: str) -> ConfigStore:
     """ Returns a dict of environment variables with the given case-insensitive
     prefix.
@@ -76,22 +97,9 @@ def load_from_env(prefix: str) -> ConfigStore:
     for k, v in os.environ.items():
         if not k.startswith(prefix + '_'):
             continue
-        # Parse URIs into factory parameters.
         if type(v) is str and '://' in str(v):
             config[k.upper() + '_STR'] = v
-            parse = urllib.parse.urlparse(str(v))
-            # Most of the Python ecosystem breaks if you name a module 'http',
-            # so we use httpget.
-            mod = 'httpget' if parse.scheme == 'http' else parse.scheme
-
-            d = {'module': mod,
-                 'address': parse.netloc,
-                 'endpoint': parse.path[1:]}  # type: Dict[str, Any]
-            if parse.query:
-                q = urllib.parse.parse_qs(parse.query)
-                d.update({k: i[0] if len(i) < 2 else i
-                         for k, i in q.items()})
-            v = d
+            v = parse_uri(v)  # type: ignore
         elif type(v) is str:
             # Make falsey things actually False.
             v = False if str(v).lower() in ['0', 'false'] else v
@@ -128,7 +136,7 @@ def load(opts: Dict[str, str], prefix: str, fname=None) -> ConfigStore:
 
 def parse_yaml_file(fname: str) -> Dict[str, Any]:
     doc = open(fname, 'r')
-    return yaml.load(doc)
+    return yaml.full_load(doc)
 
 
 def get(key=None, default=None) -> Union[ConfigStore, ConfigValue]:
