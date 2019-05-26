@@ -2,12 +2,6 @@
 from abc import ABCMeta, abstractmethod
 import time
 
-# 1st party
-from cranial.common import logger
-
-log = logger.create('listeners',
-                    logger.fallback('LISTENERS_LOGLEVEL', 'WARNING'))
-
 
 class ListenerHasNotResponded(Exception):
     pass
