@@ -94,10 +94,13 @@ class FakeClient(Client):
     async def preload(self):
         # Initial testing data.
         await self.put(self.p+'init', '1')
-        await self.put(self.p+'parts/total', '6')
+        await self.put(self.p+'parts/total', '7')
         await self.put(self.p+'parts/a', '1,2,5,0')
         await self.put(self.p+'parts/b', '3,4')
         await self.put(self.p+'checkpoint/1', '0,0')
+        await self.put(self.p+'workers/a', '1')
+        await self.put(self.p+'workers/b', '1')
+        await self.put(self.p+'parts/unassigned/6', '0')
         return self
 
     async def grant_lease(self, ttl: int):
@@ -132,19 +135,26 @@ class FakeClient(Client):
         # Simulate worker 'a' responding to requests.
         if key == self.p+'req/a':
             logging.debug(value)
-            requestor, part, rev = value.split(',')
-            if part in self.store[self.p+'parts/a'].split(','):
-                self.store['{}checkpoint/{}'.format(self.p, part)] = '42'
-                self.store['{}ack/{}/a/{}'.format(
-                    self.p, requestor, part)] = rev
-            else:
-                self.store[self.p+'deny/'+requestor] = 'a,{},{}'.format(
-                    part, rev)
+            requestor, rev = value.split(',')
+            if '1' in self.store[self.p+'parts/a'].split(','):
+                self.store['{}checkpoint/1'.format(self.p)] = '42'
+                self.store['{}ack/{}/a'.format(
+                    self.p, requestor)] = '{},{}'.format(rev, 1)
             logging.debug('Store after request to `a`: %s', self.store)
+        if key.startswith(self.p+'group-req/6') \
+                and self.p+'parts/unassigned/6' in self.store:
+            requestor = value
+            rev = key.split('/')[-1]
+            self.store['{}ack/{}/group/{}/6'.format(
+                self.p, requestor, rev)] = '1'
+        return True
 
     async def delete(self, key):
+        if not key.startswith(self.p):
+            key = self.p + key
         del(self.store[key])
 
 
 def _fake_client(prefix=PREFIX) -> Client:
     return FakeClient(prefix)
+
