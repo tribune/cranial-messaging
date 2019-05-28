@@ -202,7 +202,6 @@ async def init(cl: Client, num_parts: int = 6):
     Exception: Store already initialized.
     """
     # @TODO All these should be in a transaction.
-    logging.debug('Store on init: %s', cl.store)
     if await get_single_value(cl, 'init') == b'1':
         raise Exception('Store already initialized.')
     else:
@@ -212,6 +211,7 @@ async def init(cl: Client, num_parts: int = 6):
         await cl.put(path('parts/total'), str(num_parts))
         [await cl.put(path('parts/unassigned', n), now)
             for n in range(num_parts)]
+    logging.debug('Store on init: %s', cl.store)
 
 
 async def get_workers(cl: Client) -> List[kvResult]:
@@ -401,13 +401,14 @@ async def req_partition_from(
 async def req_partition_from_group(
         cl, requestor: str, part: str, rev: int
         ) -> Optional[PendingGroupRequest]:
-    key = path('group-req', part, rev)
+    key = path('group-req', part)
     # Don't make a new request if one already exists.
     if await get_single_value(cl, key) != Response.EMPTY:
         return None
+    key += '/' + requestor
 
-    value = requestor
-    logging.debug('Putting %s: %s', key, value)
+    value = rev
+    logging.info('Putting %s: %s', key, value)
     await cl.put(key, value)
     req = PendingGroupRequest(requestor, key, rev, part=part)
     # To trigger the first check for a response...
@@ -475,7 +476,7 @@ async def unassign_worker_parts(cl, worker_id) -> None:
 
 
 async def worker_is_dead(cl, worker_id: str) -> bool:
-    key = path('worker', worker_id)
+    key = path('workers', worker_id)
     timeout = await get_single_value(cl, key)
 
     if timeout == Response.EMPTY:
@@ -505,7 +506,7 @@ async def confirm_group_request(cl, p: PendingGroupRequest) -> Response:
         workers = await get_workers(cl)
         for w in workers:
             # Do we have an Ack?
-            worker_id = key_tail(w)
+            worker_id = w[KEY].decode().split('/')[-2]
             if worker_id == p.requestor:
                 # A requestor doesn't respond to their own requests.
                 continue
@@ -515,8 +516,10 @@ async def confirm_group_request(cl, p: PendingGroupRequest) -> Response:
                 return ack
             if ack == Response.EMPTY:
                 if not await worker_is_dead(cl, worker_id):
-                    p.response = schedule(cl.get_range(span(key)))
+                    p.response = schedule(cl.range(span(key)))
                     return ack
+                else:
+                    logging.warn("%s sees %s as DEAD!", p.requestor, worker_id)
         # If we haven't returned yet, then every worker has OK'd!
         for r in p.response:
             schedule(cl.delete(r[KEY]))
@@ -767,7 +770,8 @@ def schedule(coroutine) -> asyncio.Future:
 def worker(
         producer: Iterator[Tuple[int, Any]],
         output: Callable,
-        cl: Client = None):
+        cl: Client = None,
+        myid: str = None):
     """
     A worker receives a stream of Messages, but only processes Messages having
     an ID that belongs to a partition assigned to the worker.
@@ -779,7 +783,7 @@ def worker(
 
     ------
     producer
-    A function returning MessageId, Message Pairs
+    A Generator returning MessageId, Message Pairs
 
     output
     ------
@@ -798,52 +802,62 @@ def worker(
     [4, 5, 6]
     """
     cl = cl or client(endpoint="localhost:2379")
-    myid = str(uuid4())
+    myid = myid or str(uuid4())
     run(register(cl, myid))
 
     last_checkin = 0  # type: float
 
-    for i, msg in producer:
+    for i, msg in producer(5, 200):
         if time() - last_checkin > CHECKIN:
             parts, total_parts = run(req_parts(cl, myid))
             logging.info('Worker %s was assigned %s', myid, parts)
             last_checkin = time()
         for p, last_id in parts.items():
             # @TODO Support non-numeric partition ids.
-            if i % total_parts == int(p) and i > (last_id or 0):
+            if i % total_parts == int(p) and i > (last_id or -1):
                 ok = run(set_checkpoint(cl, p, i))
                 if ok:
                     parts[p] = i
-                    output(msg)
+                    output(msg or i)
                 break
+
+
+def sharing_worker(producer, out, client, myid):
+    worker(producer,
+           out.append,
+           client,
+           'Worker'+str(myid))
 
 
 if __name__ == '__main__':
     # Testing!
-    import doctest
-    doctest.testmod()
+    # import doctest
+    # doctest.testmod()
 
     from multiprocessing import Process, Manager  # noqa
-    from cranial.messaging.test.test_coordinator import _fake_client, _producer
+    from cranial.messaging.test.test_coordinator import (
+            _fake_client,
+            _serial_producer)
 
-    for num_workers in range(1, 8):  # up to 7 workers.
+    for num_workers in range(1, 3):  # up to 7 workers.
         manager = Manager()
-        shared = manager.Namespace()
-        shared.client = _fake_client(PREFIX)  # type: ignore
-        shared.out = []  # type: ignore
+        out = manager.list()  # type: List[int]
+        shared = manager.dict()  # type: Dict[str, str]
+        cl = _fake_client(PREFIX)
+        cl.store = shared
+        run(init(cl))
         logging.info('Starting %s workers.', num_workers)
-        ps = [Process(target=worker,
-                      args=(_producer(1),
-                            shared.out.append,  # type: ignore
-                            shared.client))  # type: ignore
-              for _ in range(num_workers)]
+        ps = [Process(target=sharing_worker,
+                      args=(_serial_producer, out, cl, i))
+              for i in range(num_workers)]
         start = time()
         for p in ps:
             p.start()
         for p in ps:
             p.join()
         logging.info('Duration: %s', time() - start)
-        success = shared.out[:500] == list(range(500))  # type: ignore
+        mis = [i for i in range(len(out)) if out[i] != i]
+        err = mis if mis == [] else out[mis[0]-5:mis[0]+5]
         logging.info(
-                'OK! %s messages %s' if success else 'FAIL :-( %s %s...',
-                len(shared.out), shared.out[:5])  # type: ignore
+                'OK! %s messages %s' if mis == [] else 'FAIL :-( %s %s...',
+                len(out), err)  # type: ignore

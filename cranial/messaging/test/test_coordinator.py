@@ -11,7 +11,7 @@ MsgId = int
 Msg = Any
 
 
-def _serial_producer(duration, mps=1000):
+def _serial_producer(qty, mps=1000):
     """
     For testing. Produces sequential integers, each only once at a rate no
     greater than `mps`. This helps us test for reliability.
@@ -29,12 +29,11 @@ def _serial_producer(duration, mps=1000):
     >>> mis if len(mis) == 0 else l[mis[0]-5:mis[0]+5]
     []
     """
-    starttime = time()
     i = 0
     while True:
-        latest = time()
-        if latest - starttime > duration:
+        if i > qty:
             return
+        latest = time()
         yield i, None
         i += 1
         if time() - latest < 1/mps:
@@ -157,4 +156,3 @@ class FakeClient(Client):
 
 def _fake_client(prefix=PREFIX) -> Client:
     return FakeClient(prefix)
-
