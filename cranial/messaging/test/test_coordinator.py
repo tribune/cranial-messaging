@@ -18,11 +18,11 @@ def _serial_producer(qty, mps=1000):
 
     >>> N = 1
     >>> M = 100
-    >>> target = int(.9*N*M)
+    >>> target = N
     >>> result = set()
     >>> for i, _ in _serial_producer(N, M):
     ...     result.add(i)
-    >>> len(result) > target
+    >>> len(result) >= target
     True
     >>> l = list(result)[:target]
     >>> mis = [i for i in range(target) if l[i] != i]
@@ -31,7 +31,7 @@ def _serial_producer(qty, mps=1000):
     """
     i = 0
     while True:
-        if i > qty:
+        if i >= qty:
             return
         latest = time()
         yield i, None

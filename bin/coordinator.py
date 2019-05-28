@@ -72,6 +72,7 @@ LAST = -1
 
 starttime = None
 PREFIX = '/cc/'
+GROUP_ACK_PATH_3 = 'ack/{}/group/{}/{}'  # requestor, revision, part
 CHECKIN = 1  # Every n seconds
 
 LOGLEVEL = 'INFO'
@@ -206,10 +207,9 @@ async def init(cl: Client, num_parts: int = 6):
         raise Exception('Store already initialized.')
     else:
         # @TODO parallelize
-        now = time()
         await cl.put(path('init'), '1')
         await cl.put(path('parts/total'), str(num_parts))
-        [await cl.put(path('parts/unassigned', n), now)
+        [await cl.put(path('parts/unassigned', n), '0')
             for n in range(num_parts)]
     logging.debug('Store on init: %s', cl.store)
 
@@ -400,7 +400,7 @@ async def req_partition_from(
 
 async def req_partition_from_group(
         cl, requestor: str, part: str, rev: int
-        ) -> Optional[PendingGroupRequest]:
+) -> Optional[PendingGroupRequest]:
     key = path('group-req', part)
     # Don't make a new request if one already exists.
     if await get_single_value(cl, key) != Response.EMPTY:
@@ -419,7 +419,7 @@ async def req_partition_from_group(
 async def delete_pending(cl, p):
     if type(p) is PendingGroupRequest:
         # First delete the request so no one else tries to respond,
-        key = path('group-req', p.part, p.revision)
+        key = group_req_key(p)
         await cl.delete(key)
         # Then delete any respones received so far.
         key = 'ack/{}/group/{}/{}'.format(p.requestor, p.revision, p.part)
@@ -433,6 +433,10 @@ def key_tail(r: kvResult) -> str:
     return r[KEY].decode().split('/')[LAST]
 
 
+def group_req_key(p: PendingGroupRequest) -> str:
+    return path('group-req', p.part, p.requestor)
+
+
 async def confirm_single_request(cl, p: PendingRequest) -> Response:
     """ Has p returned a matching Ack yet?
     Mutates p.
@@ -441,12 +445,14 @@ async def confirm_single_request(cl, p: PendingRequest) -> Response:
     logging.debug('Confirming: %s', p)
     key = 'ack/{}/{}'.format(p.requestor, p.recipient)
     if p.response and p.response.done():
-        confirm, p.part = p.response.result().decode().split(',')
-        logging.info('Got %s: %s =?= %s', key, confirm, p.revision)
-        if confirm == Response.EMPTY:
+        result = p.response.result()
+        if result == Response.EMPTY:
             # Nothing from the old owner yet. Try again:
             p.response = schedule(get_single_value(cl, key))
             return Response.EMPTY
+
+        confirm, p.part = result.decode().split(',')
+        logging.info('Got %s: %s =?= %s', key, confirm, p.revision)
 
         if confirm == str(p.revision):
             schedule(cl.delete(key))
@@ -469,10 +475,11 @@ async def worker_has_expired_part(cl, worker_id) -> bool:
 
 
 async def unassign_worker_parts(cl, worker_id) -> None:
-    parts = await get_single_value(cl, path('parts', worker_id))
-    if parts:
+    result = await cl.range(path('parts', worker_id))
+    if len(result):
+        _, parts, rev = result[FIRST]
         for p in parts.decode().split(','):
-            schedule(cl.put(path(parts, 'unassigned', p), time()))
+            schedule(cl.put(path('parts/unassigned', p), str(rev)))
 
 
 async def worker_is_dead(cl, worker_id: str) -> bool:
@@ -490,40 +497,64 @@ async def worker_is_dead(cl, worker_id: str) -> bool:
     return False
 
 
+async def check_all_responses(
+        cl: Client, p: PendingGroupRequest, key: str) -> Response:
+    """
+    Params
+    ------
+    key
+    The key prefix where responses are colected.
+    """
+    responses = {key_tail(r): r for r in p.response.result()}  # type: ignore
+    # To be followed by reponder's id.
+    workers = await get_workers(cl)
+    for w in workers:
+        # Do we have an Ack?
+        worker_id = w[KEY].decode().split('/')[-2]
+        if worker_id == p.requestor:
+            # A requestor doesn't respond to their own requests.
+            continue
+        ack = responses.get(
+            worker_id, tuple([None, Response.EMPTY]))[VALUE]
+        if ack == Response.DENY:
+            return ack
+        if ack == Response.EMPTY:
+            if not await worker_is_dead(cl, worker_id):
+                # It's not dead, so try again soon.
+                p.response = schedule(cl.range(span(key)))
+                return ack
+            else:
+                # It's dead, so ignore it.
+                logging.warning("%s sees %s as DEAD!", p.requestor, worker_id)
+                continue
+
+    return Response.OK
+
+
 async def confirm_group_request(cl, p: PendingGroupRequest) -> Response:
     """ Has p returned matching Acks from all live workers?
     Mutates p.
     @TODO Tests.
     """
     logging.debug('Confirming: %s', p)
-    # To be followed by reponder's id.
     key = 'ack/{}/group/{}/{}'.format(p.requestor, p.revision, p.part)
 
     if p.response and p.response.done():
         # Responses indexed by worker id.
-        responses = {key_tail(r): r
-                     for r in p.response.result()}
-        workers = await get_workers(cl)
-        for w in workers:
-            # Do we have an Ack?
-            worker_id = w[KEY].decode().split('/')[-2]
-            if worker_id == p.requestor:
-                # A requestor doesn't respond to their own requests.
-                continue
-            ack = responses.get(
-                    worker_id, tuple([None, Response.EMPTY]))[VALUE]
-            if ack == Response.DENY:
-                return ack
-            if ack == Response.EMPTY:
-                if not await worker_is_dead(cl, worker_id):
-                    p.response = schedule(cl.range(span(key)))
-                    return ack
-                else:
-                    logging.warn("%s sees %s as DEAD!", p.requestor, worker_id)
+        ack = await check_all_responses(cl, p, key)
+        if ack != Response.OK:
+            return ack
         # If we haven't returned yet, then every worker has OK'd!
+        try:
+            # Using try here is mainly for testing or theoretiical future
+            # stores; etcd will happily accept a delete request for a key that
+            # doesn't exist.
+            await cl.delete(path('unassigned', p.part))
+        except KeyError:
+            pass
         for r in p.response:
             schedule(cl.delete(r[KEY]))
-        schedule(cl.delete(path('group-req', p.part, p.revision)))
+        schedule(cl.delete(group_req_key(p)))
         return Response.OK
 
     # We haven't made the request yet.
@@ -541,14 +572,14 @@ async def confirm_pending_requests(cl, pending: List) -> List[Partition]:
         resp = await confirm_request(cl, req)
         if resp == Response.OK:
             logging.info(
-                    '%s Got Ack for %s from %s',
-                    req.requestor, req.part, req.recipient)  # type: ignore
+                '%s Got Ack for %s from %s',
+                req.requestor, req.part, req.recipient)  # type: ignore
             acks.append(req.part)
             pending.remove(req)
         elif resp == Response.DENY:
             logging.info(
-                    '%s Got Deny for %s from %s',
-                    req.requestor, req.part, req.recipient)  # type: ignore
+                '%s Got Deny for %s from %s',
+                req.requestor, req.part, req.recipient)  # type: ignore
             pending.remove(req)
     return acks
 
@@ -568,7 +599,7 @@ async def confirm_request(cl, p) -> Response:
 def get_available_parts(
         parts: List[kvResult], num_fair: int, myid: str) -> Tuple[List, bytes]:
     workers = filter(
-            lambda x: b'/unassigned/' not in x[KEY], parts)
+        lambda x: b'/unassigned/' not in x[KEY], parts)
 
     overworkers = []
     myparts = b''
@@ -587,13 +618,13 @@ def get_available_parts(
 
 async def req_unassigned_parts(
         cl: Client, myid: str, parts: List[kvResult], how_many: int
-        ) -> List[PendingGroupRequest]:
+) -> List[PendingGroupRequest]:
     """
     >>> from cranial.messaging.test.test_coordinator import _fake_client
     >>> c = run(_fake_client(PREFIX).preload())
     >>> parts, total = run(get_parts_with_total(c))
     >>> run(req_unassigned_parts(c, 'foo', parts, 99))[0].recipient
-    '/cc/group-req/6/0'
+    '/cc/group-req/6/foo'
     """
     unassigned = [p for p in parts if b'/unassigned/' in p[KEY]]
     logging.debug('Unassigned parts for %s: %s', how_many, unassigned)
@@ -602,10 +633,10 @@ async def req_unassigned_parts(
     while len(pending) < how_many and len(unassigned):
         p = unassigned.pop()
         req = await req_partition_from_group(
-                cl,
-                myid,
-                key_tail(p),
-                p[META].mod_revision)  # type: ignore
+            cl,
+            myid,
+            key_tail(p),
+            p[META].mod_revision)  # type: ignore
         logging.debug(req)
         if req:
             pending.append(req)
@@ -615,7 +646,7 @@ async def req_unassigned_parts(
 
 async def req_overworked_parts(
         cl, myid, overworkers, how_many
-        ) -> List[PendingRequest]:
+) -> List[PendingRequest]:
 
     pending = []  # type: List[PendingRequest]
     # Sorted by workers having the most parts assigned.
@@ -629,7 +660,7 @@ async def req_overworked_parts(
             logging.info('%s Requesting parts from %s',
                          myid, name)
             pending.append(
-                    await req_partition_from(cl, myid, name, rev))
+                await req_partition_from(cl, myid, name, rev))
             logging.debug('Pending: %s', pending)
         else:
             break
@@ -663,8 +694,8 @@ async def req_parts(cl: Client,
     if len(pending) < num_fair:
         # First look for unassigned parts.
         pending.extend(
-                await req_unassigned_parts(
-                    cl, myid, parts, num_fair - len(pending)))
+            await req_unassigned_parts(
+                cl, myid, parts, num_fair - len(pending)))
 
     myparts = None
     if len(pending) < num_fair:
@@ -676,8 +707,8 @@ async def req_parts(cl: Client,
             return {}, total
         elif len(overworkers):
             pending.extend(
-                    await req_overworked_parts(
-                        cl, myid, overworkers, num_fair - len(pending)))
+                await req_overworked_parts(
+                    cl, myid, overworkers, num_fair - len(pending)))
 
     acks = []  # type: List[Partition]
     timeout = 2
@@ -687,8 +718,8 @@ async def req_parts(cl: Client,
     while len(pending) and (time() - starttime < timeout):
         # Wait for at least one response.
         done, notdone = await asyncio.wait(
-                [req.response for req in pending if req.response],
-                return_when=asyncio.FIRST_COMPLETED)
+            [req.response for req in pending if req.response],
+            return_when=asyncio.FIRST_COMPLETED)
 
         # Check for acks
         acks.extend(await confirm_pending_requests(cl, pending))
@@ -756,6 +787,36 @@ async def get_checkpoint(cl: Client, part: str) -> Optional[int]:
     return int(result[0][VALUE].decode().split(',')[0])
 
 
+async def respond(cl: Client, myid: str, myparts: Dict) -> None:
+    """
+    >>> from cranial.messaging.test.test_coordinator import _fake_client
+    >>> c = run(_fake_client(PREFIX).preload())
+    >>> assert(run(c.put(path('group-req/4/foo'), '0')))
+    >>> assert(run(c.put(path('group-req/5/foo'), '0')))
+    >>> assert(run(c.put(path('group-req/6/foo'), '0')))
+    >>> run(respond(c, 'b', {'3': None, '4': None}))
+    >>> key = path(GROUP_ACK_PATH_3.format('foo', 0, '{}'))
+    >>> run(get_single_value(c, key.format(4))) == Response.DENY.value
+    True
+    >>> run(get_single_value(c, key.format(5))) == Response.DENY.value
+    True
+    >>> run(get_single_value(c, key.format(6))) == Response.OK.value
+    True
+    """
+    group = await cl.range(span('group-req'))  # type: List[kvResult]
+    for r in group:
+        part, worker = r[KEY].decode().split('/')[-2:]
+        rev = r[VALUE]
+        key = path(GROUP_ACK_PATH_3.format(worker, int(rev), part))
+        if part not in myparts and await get_single_value(
+                cl, path('parts/unassigned', part)) == rev:
+            # ACCEPT
+            await cl.put(key, Response.OK.value.decode())
+        else:
+            # DENY
+            await cl.put(key, Response.DENY.value.decode())
+
+
 def run(coroutine):
     loop = asyncio.get_event_loop()
     if LOGLEVEL == 'DEBUG':
@@ -804,11 +865,13 @@ def worker(
     cl = cl or client(endpoint="localhost:2379")
     myid = myid or str(uuid4())
     run(register(cl, myid))
+    parts = {}  # type: Dict
 
     last_checkin = 0  # type: float
 
-    for i, msg in producer(5, 200):
+    for i, msg in producer:
         if time() - last_checkin > CHECKIN:
+            run(respond(cl, myid, parts))
             parts, total_parts = run(req_parts(cl, myid))
             logging.info('Worker %s was assigned %s', myid, parts)
             last_checkin = time()
@@ -822,8 +885,8 @@ def worker(
                 break
 
 
-def sharing_worker(producer, out, client, myid):
-    worker(producer,
+def sharing_worker(producer, out, client, myid, how_many):
+    worker(producer(how_many, 200),
            out.append,
            client,
            'Worker'+str(myid))
@@ -836,8 +899,9 @@ if __name__ == '__main__':
 
     from multiprocessing import Process, Manager  # noqa
     from cranial.messaging.test.test_coordinator import (
-            _fake_client,
-            _serial_producer)
+        _fake_client,
+        _serial_producer)
+    num_messages = 5
 
     for num_workers in range(1, 3):  # up to 7 workers.
         manager = Manager()
@@ -848,7 +912,7 @@ if __name__ == '__main__':
         run(init(cl))
         logging.info('Starting %s workers.', num_workers)
         ps = [Process(target=sharing_worker,
-                      args=(_serial_producer, out, cl, i))
+                      args=(_serial_producer, out, cl, i, num_messages))
               for i in range(num_workers)]
         start = time()
         for p in ps:
@@ -858,6 +922,11 @@ if __name__ == '__main__':
         logging.info('Duration: %s', time() - start)
         mis = [i for i in range(len(out)) if out[i] != i]
         err = mis if mis == [] else out[mis[0]-5:mis[0]+5]
-        logging.info(
-                'OK! %s messages %s' if mis == [] else 'FAIL :-( %s %s...',
-                len(out), err)  # type: ignore
+        if len(out) == num_messages and mis == []:
+            result = 'OK! %s messages: %s...'
+            report = out[:5]
+        else:
+            result = 'FAIL :-( %s messages: %s...'
+            report = err
+
+        logging.info(result, len(out), report)
