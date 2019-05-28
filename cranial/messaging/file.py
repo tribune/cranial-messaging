@@ -1,6 +1,8 @@
 import json
 import os
-from typing import Dict, IO  #noqa
+from typing import Dict, IO  # noqa
+
+from smart_open import open
 
 from cranial.messaging import base
 from cranial.common import logger
@@ -33,7 +35,7 @@ class Notifier(base.Notifier):
     logfiles = {}  # type: Dict[str, IO]
 
     def send(self, address, message, endpoint, serde=json, **kwargs):
-        endpoint = parts_to_path(address, endpoint)
+        endpoint = kwargs.get('path') or parts_to_path(address, endpoint)
         log.debug('Writing to file: {}'.format(endpoint))
         if type(message) is str:
             message = message.encode('utf-8')
@@ -49,7 +51,7 @@ class Notifier(base.Notifier):
                 self.logfiles[endpoint] = open(endpoint, 'ab')
 
             bytes_written = self.logfiles[endpoint].write(
-                    message + '\n'.encode('utf-8'))
+                message + '\n'.encode('utf-8'))
             return bytes_written > 0
         except Exception as e:
             raise base.NotifyException(

@@ -23,7 +23,7 @@ from docopt import docopt
 
 import cranial.common.config as config
 import cranial.common.logger as logger
-from cranial.common.utils import dieIf, warnIf
+from cranial.common.utils import dieIf
 
 logging = logger.get()
 
@@ -31,16 +31,22 @@ opts = docopt(__doc__)
 
 if opts.get('--list'):
     import pkgutil
-    import cranial.listeners as l
-    import cranial.messaging as m
+    import cranial.listeners as L
+    import cranial.messaging as M
     print('Built-in Protocols\n==================')
-    for pkg, name in [(l, "Listeners"), (m, "Notifiers")]:
+    for pkg, name in [(L, "Listeners"), (M, "Notifiers")]:
         print("\n" + name + "\n----------------")
         prefix = pkg.__name__ + '.'
         for info in pkgutil.iter_modules(pkg.__path__, prefix):
             mod = info.name.split('.')[-1]
-            if mod not in ['base']:
+            if mod not in ['base', 'file']:
                 print(mod)
+        # Protocols via smart_open in the File modules:
+        for i in ('file', 's3', 'hdfs', 'webhdfs', 'ssh | scp | sftp'):
+            print(i+'*' if pkg == L else i)
+
+    print("\n* These protocols support auto decompression from gzip and " +
+          "bzip2 formats.")
     exit()
 
 
@@ -63,9 +69,36 @@ else:
           opts, prefix='cranial_pipe')
 
 
-listener = dieIf("Listener not properly configured", config.factory,
-                 {**config.get('listener'),
-                  **{'package': 'cranial.listeners', 'class': 'Listener'}})
+if opts['--debug']:
+    print(config.get())
+
+try:
+    listener = config.factory(
+        {**config.get('listener'),
+         **{'package': 'cranial.listeners', 'class': 'Listener'}})
+except TypeError as e:
+    listener = config.get('listener')
+    if type(listener) is str:
+        # Maybe it's a filename?
+        listener = dieIf("Listener not properly configured",
+                         config.factory,
+                         {'package': 'cranial.listeners',
+                          'module': 'file',
+                          'class': 'Listener',
+                          'path': listener})
+    else:
+        raise(e)
+except ModuleNotFoundError:
+    listener_str = config.get('listener_str')
+    logging.info('Trying smart_open for URI: %s', listener_str)
+    listener = dieIf("Listener not properly configured",
+                     config.factory,
+                     {**config.get('listener'),
+                      **{'package': 'cranial.listeners',
+                         'class': 'Listener',
+                         'module': 'file',
+                         'path': listener_str}})
+
 
 send_params = config.get('target')
 
@@ -75,8 +108,6 @@ target = dieIf("Target not properly configured", config.factory,
 
 sleep_time = config.get('sleep', 1)
 
-if opts['--debug']:
-    print(config.get())
 
 while True:
     try:
@@ -86,7 +117,7 @@ while True:
         else:
             msgstr = str(message)
         if config.get('echo', False):
-            print(message)
+            print(message.strip())
         if config.get('ignore_empty', True) and msgstr.strip() == '':
             continue
     except StopIteration:
