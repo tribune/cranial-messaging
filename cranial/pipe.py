@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 """Usage: pipe.py [--debug] [--echo] [--response] [--ignore-empty] \
-                  [--config <file>] [<listener>] [<target>]
+                  [--config <file>] [--list] [<listener>] [<target>]
 
 Options:
   --echo, -e                  Print messages received.
   --response, -r              If the target responds, print it.
-  --ignore-empty, -i          Don't send messages consisting of only whitespace.
+  --ignore-empty, -i          Don't send messages of only whitespace.
   --config=<file>, -f=<file>  Config file.
+  --list, -l                  List supported protocols & exit.
 
 @TODO
 Config Example:
@@ -28,9 +29,28 @@ logging = logger.get()
 
 opts = docopt(__doc__)
 
+if opts.get('--list'):
+    import pkgutil
+    import cranial.listeners as l
+    import cranial.messaging as m
+    print('Built-in Protocols\n==================')
+    for pkg, name in [(l, "Listeners"), (m, "Notifiers")]:
+        print("\n" + name + "\n----------------")
+        prefix = pkg.__name__ + '.'
+        for info in pkgutil.iter_modules(pkg.__path__, prefix):
+            mod = info.name.split('.')[-1]
+            if mod not in ['base']:
+                print(mod)
+    exit()
+
+
 # Conventional syntax
 if opts.get('<listener>') == '-':
     opts['<listener>'] = 'stdin://'
+elif opts.get('<listener>') is None:
+    print("At least a listener is required. Use for --help or --list to see " +
+          "supported listeners & notifiers.")
+    exit(1)
 
 if opts.get('<target>') == '-' or opts.get('<target>') is None:
     opts['<target>'] = 'stdout://'
