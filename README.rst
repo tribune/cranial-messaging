@@ -31,17 +31,17 @@ Try:
 
     ``$./cranial pipe kafka://broker.a,broker.b/topic # stdout is the default``
 
-    ``$ ./cranial pipe postgresql://your.host:5439/name/table?last_id=0 \``::
-      ssh://you@example.com:22022/file.json.bzip2
+    ``$ ./cranial pipe postgresql://your.host:5439/name/table?last_id=0 \``
+    ``>  ssh://you@example.com:22022/file.json.bzip2``
 
-    ``$ ./cranial pipe db://your.host/name/table?driver=mysql \``::
-      hdfs://example.com/path/to/file.json.gz
+    ``$ ./cranial pipe db://your.host/name/table?driver=mysql \``
+    ``>  hdfs://example.com/path/to/file.json.gz``
 
-    ``$ ./cranial pipe tweets://yourname:password@#someTag \``::
-      fb://yourname:password@ # Doesn't exist yet, but Easy to implement.
+    ``$ ./cranial pipe tweets://yourname:password@#someTag \``
+    ``>   fb://yourname:password@ # Doesn't exist yet, but Easy to implement.``
 
-    ``$ ./cranial pipe --response out.txt http://httpbin.org/anything \``::
-        | ./cranial pipe - s3://bucket/piping-to-myself/responses.txt.gz
+    ``$ ./cranial pipe --response out.txt http://httpbin.org/anything \``
+    ``>  | ./cranial pipe - s3://bucket/piping-to-myself/responses.txt.gz``
 
     ``$ ./cranial pipe --list  # Get supported protocols``
 
