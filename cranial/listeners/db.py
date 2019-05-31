@@ -18,6 +18,7 @@ class Listener(base.Listener):
                  last_id: Any = None,
                  limit=1000,
                  sleep=10,
+                 select='*',
                  **kwargs) -> None:
         """
         Parameters
@@ -41,7 +42,8 @@ class Listener(base.Listener):
         Maximum number of rows to retrieve in a single query.
         """
         self.cursor = cursor
-        self.query_head = 'SELECT * FROM {} WHERE {} > '.format(table, id)
+        self.query_head = 'SELECT {} FROM {} WHERE {} > '.format(
+            select, table, id)
         if not last_id:
             cursor.execute("SELECT MAX({}) FROM {}".format(id, table))
             last_id = cursor.fetchone()[0]
@@ -50,7 +52,7 @@ class Listener(base.Listener):
         self.id_col = id
         self.queue = deque()  # type: Deque
         self.col_names = None
-        self.sleeptime = sleep
+        self.sleeptime = int(sleep)
 
     def _queue_results(self):
         # render_params helps because we don't want to assuem the data type of

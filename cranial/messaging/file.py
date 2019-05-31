@@ -34,7 +34,8 @@ class Notifier(base.Notifier):
     """
     logfiles = {}  # type: Dict[str, IO]
 
-    def send(self, address, message, endpoint, serde=json, **kwargs):
+    def send(self, address, message, endpoint, serde=json, append=False,
+             **kwargs):
         endpoint = kwargs.get('path') or parts_to_path(address, endpoint)
         log.debug('Writing to file: {}'.format(endpoint))
         if type(message) is str:
@@ -48,7 +49,8 @@ class Notifier(base.Notifier):
                 d, _ = os.path.split(endpoint)
                 if d != '':
                     os.makedirs(d, exist_ok=True)
-                self.logfiles[endpoint] = open(endpoint, 'ab')
+                self.logfiles[endpoint] = open(endpoint,
+                                               'ab' if append else 'wb')
 
             bytes_written = self.logfiles[endpoint].write(
                 message + '\n'.encode('utf-8'))
