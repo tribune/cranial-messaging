@@ -52,14 +52,17 @@ sleep: 10
 """
 
 from time import sleep, time
+from typing import Callable, Dict, List, Optional, Tuple  # noqa
 
 from docopt import docopt
+from recordclass import RecordClass
 import ujson as json
 
 import cranial.messaging  # noqa; For Typing.
+from cranial.messaging.base import Message, Notifier
 import cranial.common.config as config
 import cranial.common.logger as logger
-from cranial.common.utils import dieIf
+from cranial.common.utils import dieIf, warnIf
 
 logging = logger.get()
 
@@ -85,28 +88,27 @@ if opts.get('--list'):
           "bzip2 formats.")
     exit()
 
-
 # Conventional syntax for stdin
 if opts.get('<listener>') == '-':
     opts['<listener>'] = 'stdin://'
-elif opts.get('<listener>') is None:
+elif opts.get('<listener>') is None and not opts.get('--config'):
     print("At least a listener is required. Use for --help or --list to see " +
           "supported listeners & notifiers.")
     exit(1)
 
 # ...and stdout
-if opts.get('<target>') == '-' or opts.get('<target>') is None:
+if opts.get('<target>') == '-':
     opts['<target>'] = 'stdout://'
 
-if opts.get('-f'):
+if opts.get('--config'):
     dieIf("Couldn't load config", config.load,
-          opts, prefix='cranial_pipe', fname=opts['-f'])
+          opts, prefix='cranial_pipe', fname=opts['--config'])
 else:
     dieIf("Couldn't load config", config.load,
           opts, prefix='cranial_pipe')
 
 
-if opts['--debug']:
+if config.get('debug'):
     print(config.get())
 
 try:
@@ -137,112 +139,137 @@ except ModuleNotFoundError:
                          'path': listener_str}})
 
 
-sleep_time = config.get('sleep', 1)
-
-connect_time = time()
-msg_count = 0
-refresh = config.get('refresh')
-by_time = refresh and refresh.endswith('sec')
-refresh = refresh and int(refresh.replace('sec', ''))
-last_id = int(config.get('listener', {}).get('last_id')
-              or config.get('last_id', '0'))
-target = None  # type: cranial.messaging.base.Notifier
+class NotifierTracker(RecordClass):
+    notifier: Optional[Notifier]
+    builder: Callable
+    msg_count: int
+    connect_time: float
+    last_id: int = 0
 
 
-while True:
-    if refresh and not by_time and msg_count >= refresh:
-        msg_count = 0
-    if (msg_count == 0) \
-            or (refresh and by_time and time() - connect_time > refresh):
-        # This whole block of code has gotten ugly and needs refactoring.
-        msg_count = 0
-        send_params = config.get('target')
-        notifier_str = config.get('target_str')
-        if type(send_params) is str:
-            # It's a filename
-            send_params = {'package': 'cranial.messaging',
-                           'module': 'file',
-                           'class': 'Notifier',
-                           'address': '',
-                           'endpoint': send_params,
-                           'path': send_params}
-        sep = config.get('append')
-        ext = ''
-        if sep:
-            ext = sep + str(last_id) + config.get('ext', '')
-            send_params['endpoint'] += ext
-            if send_params.get('path'):
-                send_params['path'] += ext
-        del(target)
-        try:
-            target = config.factory(
-                {**send_params,
-                 **{'package': 'cranial.messaging',
-                               'class': 'Notifier'}})
-        except ModuleNotFoundError:
-            # Try unknown protocols through smart_open.
-            send_params['module'] = 'file'
-            send_params['path'] = notifier_str + ext
-            target = dieIf("Target not properly configured", config.factory,
-                           {**send_params,
-                            **{'package': 'cranial.messaging',
-                               'class': 'Notifier'}})
+# ------------------[Notifier, Params, num messages, connect time]
+NotifierQuad = Tuple[Notifier, Dict,   int,          float]
+NOTIFIER_PARAMS = {'package': 'cranial.messaging', 'class': 'Notifier'}
 
-        connect_time = time()
+
+def target_builder(params: Dict,
+                   uri: str = ''
+                   ) -> Callable[[Notifier, int, float, int], NotifierQuad]:
+    refresh = params.get('refresh') or config.get('refresh')
+    by_time = refresh and refresh.endswith('sec')
+    refresh = refresh and int(refresh.replace('sec', ''))
+    if type(params) is str:
+        # It's a filename
+        params = {'module': 'file',
+                  'address': '',
+                  'endpoint': params,
+                  'path': params,
+                  **NOTIFIER_PARAMS}
+    sep = params.get('append') or config.get('append', '')
+    extfmt = '{}' + sep + '{}' + (params.get('ext') or config.get('ext', ''))
 
     try:
-        message = listener.recv()
-        if type(message) not in [str, bytes]:
-            msgstr = json.dumps(message, ensure_ascii=False)
-        elif type(message) is bytes:
-            msgstr = message.decode()
+        config.factory({**params, **NOTIFIER_PARAMS})
+    except ModuleNotFoundError:
+        # Try unknown protocols through smart_open.
+        params['module'] = 'file'
+        params['path'] = uri
+
+    orig_endpoint = params.get('endpoint', '')
+    orig_path = params.get('path', '')
+
+    def get_target(target: Optional[Notifier],
+                   msg_count: int,
+                   connect_time: float,
+                   last_id: int) -> NotifierQuad:
+
+        if refresh and not by_time and msg_count >= refresh:
+            msg_count = 0
+
+        if (msg_count == 0) \
+                or (refresh and by_time and time() - connect_time > refresh):
+            if sep:
+                params['endpoint'] = extfmt.format(orig_endpoint, last_id)
+                if params.get('path'):
+                    params['path'] = extfmt.format(orig_path, last_id)
+
+            target = dieIf(
+                "Couldn't build Target",
+                config.factory,
+                {**params, **NOTIFIER_PARAMS})
+
+            return target, params, 0, time()
         else:
-            msgstr = message
+            return target, params, msg_count, connect_time
+
+    return get_target
+
+
+def message_update(message: Message, response: Message) -> Message:
+    try:
+        response = response.dict()
+    except ValueError:
+        response = {"response": response.str()}
+
+    return Message({**message.dict(), **response})
+
+
+sleep_time = config.get('sleep', 1)
+
+last_id = int(config.get('listener', {}).get('last_id')
+              or config.get('last_id', '0'))
+
+now = time()
+pipeline = []  # type: List[NotifierTracker]
+for p in config.get('pipeline', []):
+    uri = ''
+    if isinstance(p, str):
+        uri = p
+        p = config.parse_uri(p)
+    pipeline.append(NotifierTracker(None, target_builder(p, uri), 0, now))
+
+params = config.get('target', {'module': 'stdout'})  # type: Dict
+get_target = target_builder(params, config.get('target_str'))
+pipeline.append(NotifierTracker(None, get_target, 0, now))
+
+
+# @TODO Use importlib to config by string
+serde = json
+
+while True:  # noqa
+    try:
+        message = Message(listener.recv(), serde=serde)
 
         if config.get('echo', False):
-            print(msgstr.strip())
-        if not config.get('include_empty') and msgstr.strip() == '':
+            print(message.str().strip())
+        if not config.get('include_empty') and message.str().strip() == '':
             continue
     except StopIteration:
         break
 
-    if message:
-        msg_count += 1
+    if message.raw:
         logging.debug('Received Message: %s', message)
-        send_params['message'] = message
-        # response = warnIf("Couldn't send", target.send, **send_params)
-        response = target.send(**send_params)
-        if response and config.get('response', False):
-            print(str(response))
 
-        if type(message) != dict:
-            try:
-                message = json.loads(response)
-            except Exception as e:
-                logging.info(e)
-                pass
-        if type(message) is dict:
-            last_id = message.get(config.get('key', 'id')) or last_id
-        elif type(message) != int:
-            try:
-                last_id = int(message.split(
-                    config.get('delimiter', ','), 1)[0])
-            except:  # noqa; We really do allow any exception here.
-                pass
-        else:
-            last_id = message
+        # Sending...
+        for nt in pipeline:  # type: NotifierTracker
+            nt.target, params, nt.msg_count, nt.connect_time = nt.builder(
+                nt.target, nt.msg_count, nt.connect_time, nt.last_id)
+            nt.msg_count += 1
+            params['message'] = message.str()
+            response = Message(
+                warnIf("Couldn't send", nt.target.send, **params))
+            if response.raw and config.get('response', False):
+                print(response.str())
+
+            nt.last_id = message.dict().get(
+                config.get('key', 'id')) or nt.last_id
+
+            message = message_update(message, response)
 
         if config.get('update'):
-            if type(response) != dict:
-                try:
-                    response = json.loads(response)
-                except Exception as e:
-                    logging.info(e)
-                    pass
+            print(message.str())
 
-            if type(message) is dict and type(response) is dict:
-                print(json.dumps({**message, **response}, ensure_ascii=False))
-
+        # End sending.
         sleep_count = 0
     else:
         sleep(sleep_time)
