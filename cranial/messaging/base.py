@@ -8,7 +8,12 @@ import importlib
 from random import randint
 from threading import Thread
 from time import time
-from typing import Any, Dict, List, IO, Optional, Set, Tuple, TYPE_CHECKING  # noqa
+from typing import (Any, Dict, List, IO, Optional, Set,  # noqa
+                    Tuple, Union, TYPE_CHECKING)  # noqa
+
+from recordclass import structclass
+from recordclass.recordobject import recordobject
+import ujson as json
 
 from cranial.common import logger
 import cranial.servicediscovery.base as sd
@@ -16,6 +21,100 @@ from cranial.servicediscovery import marathon
 
 
 log = logger.get('MESSAGING_LOGLEVEL')
+
+StructClass = recordobject
+
+
+class Serde(metaclass=ABCMeta):
+    @classmethod
+    def __subclasshook__(cls, ClassObject):
+        """This hook cases `isinstance(x, Serde)` to be True for any x which is
+        an object or class having both loads() and dumps() methods."""
+        if cls is Serde:
+            if any("loads" in B.__dict__ and "dumps" in B.__dict__
+                   for B in ClassObject.__mro__):
+                return True
+        return NotImplemented
+
+
+class Message():
+    """Stores message in it's native form and lazy-converts to required forms
+    with minimal copying.
+    """
+    raw: Any
+    b: Optional[bytes] = None
+    d: Optional[Dict] = None
+    s: Optional[str] = None
+    r = None
+
+    def __init__(self,
+                 message: Union[bytes, str, Dict],
+                 serde=json,
+                 encoding: str = 'utf-8',
+                 loads_params: Optional[Dict] = None,
+                 dumps_params: Optional[Dict[str, Any]] = None):
+        self.raw = message
+        self.serde = serde
+        self.encoding = encoding
+        if serde == json and not dumps_params:
+            self.dumps_params = {'ensure_ascii': False}
+        else:
+            self.dumps_params = dumps_params or {}
+        self.loads_params = loads_params or {}
+
+    def str(self):
+        if not self.s:
+            if isinstance(self.raw, str):
+                return self.raw
+            elif isinstance(self.raw, bytes):
+                self.s = self.raw.decode(self.encoding)
+            else:
+                self.s = self.serde.dumps(self.dict(), **self.dumps_params)
+        return self.s
+
+    def bytes(self):
+        if not self.b:
+            if isinstance(self.raw, bytes):
+                return self.raw
+            elif isinstance(self.raw, str):
+                self.b = self.raw.encode(self.encoding)
+            else:
+                self.b = bytes(self.str(), self.encoding)
+        return self.b
+
+    def dict(self):
+        if not self.d:
+            if isinstance(self.raw, dict):
+                return self.raw
+            elif hasattr(self.raw, '_asdict'):
+                self.d = self.raw._asdict()
+            else:
+                self.d = self.serde.loads(self.raw, **self.loads_params)
+        return self.d
+
+    def record(self):
+        if not self.r:
+            if isinstance(self.raw, StructClass):
+                return self.raw
+            else:
+                d = self.dict()
+                self.r = structclass('T', d)(**d)
+        return self.r
+
+    def __nonzero__(self):
+        return bool(self.raw)
+
+    def __str__(self):
+        return self.str()
+
+    def __bytes__(self):
+        return self.bytes()
+
+    def __getattr__(self, name):
+        if name == '__dict__':
+            return self.dict()
+        else:
+            return getattr(self.raw, name)
 
 
 class NotifyException(Exception):
@@ -50,11 +149,11 @@ class Async_Wrapper(AsyncNotifier):
 
     def worker(self, address, message, endpoint, kwargs):
         self.results[address] = self.notifier.send(
-                address, message, endpoint, **kwargs)
+            address, message, endpoint, **kwargs)
 
     def send(self, address=None, message=None, endpoint=None, **kwargs):
         t = Thread(
-              target=self.worker, args=(address, message, endpoint, kwargs))
+            target=self.worker, args=(address, message, endpoint, kwargs))
         self.threads.append(t)
         t.start()
         return True
@@ -120,10 +219,10 @@ class Messenger():
     sent_success = set()  # type: Set[Tuple[str, str, str]]
 
     def __init__(
-          self,
-          endpoint: str = 'key',
-          discovery: sd.Discovery = None,
-          factory=None, **kwargs) -> None:
+            self,
+            endpoint: str = 'key',
+            discovery: sd.Discovery = None,
+            factory=None, **kwargs) -> None:
         """
         Parameters
         ----------
@@ -217,7 +316,7 @@ class Messenger():
         notifier = self.get_notifier_for_service(svc)
         threads[svc] = notifier
         log.debug(
-          'Attempt to notify "any" "{}", instance "{}" via {} at "{}".'.format(
+            'Attempt to notify "any" "{}", instance "{}" via {} at "{}".'.format(
                 svc, instances[i], type(notifier), self.endpoint))
 
         # @TODO Most notifiers should pick local if possible?
