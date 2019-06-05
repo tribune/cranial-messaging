@@ -140,7 +140,7 @@ except ModuleNotFoundError:
 
 
 class NotifierTracker(RecordClass):
-    notifier: Optional[Notifier]
+    target: Optional[Notifier]
     builder: Callable
     msg_count: int
     connect_time: float
@@ -208,8 +208,9 @@ def target_builder(params: Dict,
 def message_update(message: Message, response: Message) -> Message:
     try:
         response = response.dict()
-    except ValueError:
+    except (TypeError, ValueError):
         response = {"response": response.str()}
+
 
     return Message({**message.dict(), **response})
 
@@ -258,13 +259,18 @@ while True:  # noqa
             params['message'] = message.str()
             response = Message(
                 warnIf("Couldn't send", nt.target.send, **params))
-            if response.raw and config.get('response', False):
+            if response and config.get('response', False):
                 print(response.str())
 
-            nt.last_id = message.dict().get(
-                config.get('key', 'id')) or nt.last_id
+            try:
+                nt.last_id = message.dict().get(
+                    config.get('key', 'id')) or nt.last_id
+            except ValueError:
+                # Message is probably not converatble to a dict.
+                pass
 
-            message = message_update(message, response)
+            if response:
+                message = message_update(message, response)
 
         if config.get('update'):
             print(message.str())

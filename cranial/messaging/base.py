@@ -69,7 +69,11 @@ class Message():
             elif isinstance(self.raw, bytes):
                 self.s = self.raw.decode(self.encoding)
             else:
-                self.s = self.serde.dumps(self.dict(), **self.dumps_params)
+                try:
+                    self.s = self.serde.dumps(self.dict(), **self.dumps_params)
+                except TypeError:
+                    log.warning("Couldn't deserialize %s", self.raw)
+                    self.s = str(self.raw)
         return self.s
 
     def bytes(self):
@@ -86,6 +90,8 @@ class Message():
         if not self.d:
             if isinstance(self.raw, dict):
                 return self.raw
+            elif self.raw is None:
+                self.d = {}
             elif hasattr(self.raw, '_asdict'):
                 self.d = self.raw._asdict()
             else:
