@@ -38,13 +38,16 @@ def opts2env(opts: Dict[str, str], prefix: str) -> None:
     with the given case-insensitive prefix. `__name__` might make a good
     prefix.
 
-    >>> opts2env({'--monty': 'spam', '<WITCH>': True, 'duck': False}, 'ctest')
+    >>> opts2env({'--monty': 'spam', '<WITCH>': True, 'duck': False, 'a': 'b'},
+    ...          'ctest')
     >>> os.environ['CTEST_MONTY']
     'spam'
     >>> os.environ['CTEST_WITCH']
     '1'
     >>> os.environ.get('CTEST_DUCK', 'missing')
     'missing'
+    >>> os.environ['CTEST_A']
+    'b'
     """
     prefix = prefix.upper()
     for k, v in opts.items():
@@ -70,7 +73,7 @@ def parse_uri(s: str) -> Dict:
     if parse.query:
         q = urllib.parse.parse_qs(parse.query)
         d.update({k: i[0] if len(i) < 2 else i
-                 for k, i in q.items()})
+                  for k, i in q.items()})
     return d
 
 
@@ -89,6 +92,8 @@ def load_from_env(prefix: str) -> ConfigStore:
     >>> conf['URI'] == dict(\
     module='kafka', address='host', endpoint='ok', mode='hot')
     True
+    >>> conf['URI_STR']
+    'kafka://host/ok?mode=hot'
     """
     prefix = prefix.upper()
     config = {}  # type: ConfigStore
@@ -97,8 +102,10 @@ def load_from_env(prefix: str) -> ConfigStore:
     for k, v in os.environ.items():
         if not k.startswith(prefix + '_'):
             continue
+        # @TODO Not sure this is the best place for this.
         if type(v) is str and '://' in str(v):
-            config[k.upper() + '_STR'] = v
+            fullkey = k.upper() + '_STR'
+            config[fullkey.replace(prefix+'_', '')] = v
             v = parse_uri(v)  # type: ignore
         elif type(v) is str:
             # Make falsey things actually False.
@@ -127,8 +134,11 @@ def load(opts: Dict[str, str], prefix: str, fname=None) -> ConfigStore:
     global immutable_config_values
     if immutable_config_values is not None:
         raise Exception('load() function should only be called once.')
-    conf = parse_yaml_file(fname) if fname else {}
-    opts2env(opts, prefix)
+    conf = {k.upper(): v for k, v in parse_yaml_file(fname).items()} if fname \
+        else {}
+    str_conf = {k: v for k, v in conf.items() if type(v) is str}
+    str_conf.update(opts)
+    opts2env(str_conf, prefix)
     conf.update(load_from_env(prefix))
     immutable_config_values = OrderedDict(conf)
     return conf
