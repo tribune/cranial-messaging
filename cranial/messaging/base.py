@@ -72,7 +72,7 @@ class Message():
                 try:
                     self.s = self.serde.dumps(self.dict(), **self.dumps_params)
                 except TypeError:
-                    log.warning("Couldn't deserialize %s", self.raw)
+                    log.info("Couldn't deserialize %s", self.raw)
                     self.s = str(self.raw)
         return self.s
 

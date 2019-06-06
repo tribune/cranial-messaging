@@ -211,8 +211,12 @@ def message_update(message: Message, response: Message) -> Message:
     except (TypeError, ValueError):
         response = {"response": response.str()}
 
+    try:
+        message = message.dict()
+    except (TypeError, ValueError):
+        message = {"message": message.str()}
 
-    return Message({**message.dict(), **response})
+    return Message({**message, **response})
 
 
 sleep_time = config.get('sleep', 1)
@@ -265,7 +269,7 @@ while True:  # noqa
             try:
                 nt.last_id = message.dict().get(
                     config.get('key', 'id')) or nt.last_id
-            except ValueError:
+            except (TypeError, ValueError):
                 # Message is probably not converatble to a dict.
                 pass
 
