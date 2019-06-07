@@ -1,8 +1,13 @@
 #! /usr/bin/python3
-"""Usage: pipe.py [--debug] [--echo] [--response] [--update] [--include-empty]\
-                  [--refresh <num>] [--key <key>] [--append <sep>]\
-                  [--ext <str>] [--config <file>] [--list]\
-                  [<listener>] [<target>]
+"""Usage:
+    pipe [--debug] [--echo] [--response] [--update] [--include-empty]
+            [--refresh <num>] [--key <key>] [--separator <sep>]
+            [--ext <str>] [--config <file>]
+            [<listener>] [<target>]
+    pipe [-erui] [-t <num>] [-k <key] [-s <sep>] [-x <str>] [-f file]
+         [<listener>] [<target>]
+    pipe --list
+    pipe --help
 
 Options:
   -e --echo                  Print messages received.
@@ -13,11 +18,11 @@ Options:
                              this many messages. Use -t=10sec to refresh after
                              this many seconds instead.
   -k <key> --key <key>       If input is a dict, this is the key for the entry
-                             containing the unique, primary key. [default: id]
-  -a <sep> --append <sep>    If input is dict with an ID, append <sep> and the
+                             containing the unique, primary key.
+  -s <sep> --separator <sep> If input is dict with an ID, append <sep> and the
                              ID to the end of the URI path.
-  -x <str> --ext <str>       Suffix to append after ID when using --append.
-  -f <file> --config <file>  Config file.
+  -x <str> --ext <str>       Suffix to append after ID when using -s.
+  -f <file> --config <file>  Config file. [default: pipe.yml]
   -l --list                  List supported protocols & exit.
 
 Usage examples:
@@ -51,6 +56,7 @@ target: module=httpget address=localhost:8000 endpoint=hello
 sleep: 10
 """
 
+import os
 from time import sleep, time
 from typing import Callable, Dict, List, Optional, Tuple  # noqa
 
@@ -100,7 +106,7 @@ elif opts.get('<listener>') is None and not opts.get('--config'):
 if opts.get('<target>') == '-':
     opts['<target>'] = 'stdout://'
 
-if opts.get('--config'):
+if os.path.isfile('pipe.yml') or opts.get('--config') != 'pipe.yml':
     dieIf("Couldn't load config", config.load,
           opts, prefix='cranial_pipe', fname=opts['--config'])
 else:
@@ -109,6 +115,7 @@ else:
 
 
 if config.get('debug'):
+    logging.setLevel('DEBUG')
     print(config.get())
 
 try:
@@ -165,7 +172,7 @@ def target_builder(params: Dict,
                   'endpoint': params,
                   'path': params,
                   **NOTIFIER_PARAMS}
-    sep = params.get('append') or config.get('append', '')
+    sep = params.get('separator') or config.get('separator', '')
     extfmt = '{}' + sep + '{}' + (params.get('ext') or config.get('ext', ''))
 
     try:
@@ -221,8 +228,10 @@ def message_update(message: Message, response: Message) -> Message:
 
 sleep_time = config.get('sleep', 1)
 
-last_id = int(config.get('listener', {}).get('last_id')
-              or config.get('last_id', '0'))
+try:
+    last_id = int(config.get('listener', {}).get('last_id', 0))
+except AttributeError:
+    last_id = int(config.get('last_id', 0))
 
 now = time()
 pipeline = []  # type: List[NotifierTracker]
@@ -231,16 +240,19 @@ for p in config.get('pipeline', []):
     if isinstance(p, str):
         uri = p
         p = config.parse_uri(p)
-    pipeline.append(NotifierTracker(None, target_builder(p, uri), 0, now))
+    pipeline.append(NotifierTracker(
+        None, target_builder(p, uri), 0, now, last_id))
 
 params = config.get('target', {'module': 'stdout'})  # type: Dict
 get_target = target_builder(params, config.get('target_str'))
-pipeline.append(NotifierTracker(None, get_target, 0, now))
+pipeline.append(NotifierTracker(None, get_target, 0, now, last_id))
 
 
 # @TODO Use importlib to config by string
 serde = json
 
+if config.get('debug'):
+    timer = time()
 while True:  # noqa
     try:
         message = Message(listener.recv(), serde=serde)
@@ -261,22 +273,27 @@ while True:  # noqa
                 nt.target, nt.msg_count, nt.connect_time, nt.last_id)
             nt.msg_count += 1
             params['message'] = message.str()
-            response = Message(
-                warnIf("Couldn't send", nt.target.send, **params))
+            response = warnIf("Couldn't send", nt.target.send, **params)
             if response and config.get('response', False):
-                print(response.str())
+                print(response)
 
             try:
+                # @TODO this is probably slowing us down unnecessarly, and it's
+                # ugly.
                 nt.last_id = message.dict().get(
                     config.get('key', 'id')) or nt.last_id
-            except (TypeError, ValueError):
+            except (TypeError, ValueError) as e:
                 # Message is probably not converatble to a dict.
+                if config.get('debug'):
+                    print(e)
                 pass
 
-            if response:
-                message = message_update(message, response)
+            if response and config.get('update'):
+                message = message_update(message, Message(response))
+            elif response:
+                message = Message(response)
 
-        if config.get('update'):
+        if config.get('update') and config.get('response'):
             print(message.str())
 
         # End sending.
@@ -287,3 +304,6 @@ while True:  # noqa
         if sleep_count % 5 == 0:
             logging.debug("No messages for %s seconds",
                           sleep_count * sleep_time)
+
+if config.get('debug'):
+    print('Loop time: {}'.format(time() - timer))

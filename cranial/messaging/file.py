@@ -34,8 +34,12 @@ class Notifier(base.Notifier):
     """
     logfiles = {}  # type: Dict[str, IO]
 
-    def send(self, address, message, endpoint, serde=json, append=False,
+    def send(self, address=None, message='', endpoint=None, serde=json,
+             append=False,
              **kwargs):
+        if not ((address and endpoint) or kwargs.get('path')):
+            raise Exception(
+                'Must provide either path, or address and endpoint.')
         endpoint = kwargs.get('path') or parts_to_path(address, endpoint)
         log.debug('Writing to file: {}'.format(endpoint))
         if type(message) is str:
@@ -54,7 +58,10 @@ class Notifier(base.Notifier):
 
             bytes_written = self.logfiles[endpoint].write(
                 message + '\n'.encode('utf-8'))
-            return bytes_written > 0
+            if bytes_written > 0:
+                return message
+            else:
+                raise Exception("Couldn't write to destination.")
         except Exception as e:
             raise base.NotifyException(
                 "{} || endpoint: {} || message: {}".format(
