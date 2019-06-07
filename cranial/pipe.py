@@ -60,6 +60,7 @@ import os
 from time import sleep, time
 from typing import Callable, Dict, List, Optional, Tuple  # noqa
 
+from cachetools import cached, TTLCache
 from docopt import docopt
 from recordclass import RecordClass
 import ujson as json
@@ -115,7 +116,7 @@ else:
 
 
 if config.get('debug'):
-    logging.setLevel('DEBUG')
+    logging.setLevel('INFO')
     print(config.get())
 
 try:
@@ -226,6 +227,31 @@ def message_update(message: Message, response: Message) -> Message:
     return Message({**message, **response})
 
 
+def cache_key(target: Notifier, params: dict, message: dict):
+    return message[params['cache_key']].lower()
+
+
+@cached(TTLCache(2048, 86400), key=cache_key)
+def cached_send(target: Notifier, params: dict, message: dict):
+    # Message is only needed by the cache; it's already serialized in params.
+    logging.debug('CACHE MISS %s', type(target))
+    return target.send(**params)
+
+
+def cacheable_send(target: Notifier, params: dict, message: Message):
+    try:
+        message = message.dict()
+        if params.get('cache_key'):
+            logging.debug('CACHE_ATTEMPT %s', type(target))
+            return cached_send(target, params, message)
+        else:
+            logging.debug("CACHE SKIP %s", type(target))
+            return target.send(**params)
+    except Exception as e:
+        logging.debug('CACHE MISS EXCEPTION: %s', e)
+        return target.send(**params)
+
+
 sleep_time = config.get('sleep', 1)
 
 try:
@@ -273,7 +299,7 @@ while True:  # noqa
                 nt.target, nt.msg_count, nt.connect_time, nt.last_id)
             nt.msg_count += 1
             params['message'] = message.str()
-            response = warnIf("Couldn't send", nt.target.send, **params)
+            response = cacheable_send(nt.target, params, message)
             if response and config.get('response', False):
                 print(response)
 
