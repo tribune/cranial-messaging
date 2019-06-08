@@ -49,9 +49,9 @@ class Notifier(base.Notifier):
         try:
             if endpoint not in self.logfiles.keys() \
                     or self.logfiles[endpoint].closed:
-                # make sure the path exists
                 d, _ = os.path.split(endpoint)
-                if d != '':
+                # make sure the path exists for actual local files.
+                if d != '' and '://' not in endpoint:
                     os.makedirs(d, exist_ok=True)
                 self.logfiles[endpoint] = open(endpoint,
                                                'ab' if append else 'wb')
