@@ -99,7 +99,7 @@ def find_credentials(credentials_file='~/.pgpass', **kwargs) -> Dict[str, str]:
     creds = get_credentials(credentials_file)
     for key, value in kwargs.items():
         if value:
-            creds = list(filter(lambda x: x.get(key) == value, creds))
+            creds = list(filter(lambda x: x.get(key) == (value or '*'), creds))
 
     if len(creds) == 0:
         raise Exception('No such credentials available.')
