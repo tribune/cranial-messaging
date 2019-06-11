@@ -25,7 +25,7 @@ Github: https://github.com/tribune/cranial-messaging/blob/master/ontology/crania
 Modules
 ########
 
-Messaging
+Messaging Module
 ====================
 
 Installation
@@ -96,11 +96,25 @@ Wrappers & Adapters for common services and protocols
 #. Apache Mesos and Marathon
 
 
-Some Candidates for Future modules?
+Some Candidates for Future Notifier sub-modules?
 -----------------------------------
 Contributions welcome!
 #. Logstash
 #. Redis
+
+
+Datastore Module
+======================
+
+Sub-components:
+
+Adapters: Wrappers to standardize interfaces to datastores.
+
+Fetchers: Utilities for transferring Bytes or Records between different
+datastores, or between datastores and services. The current implementation 
+does not match the OWL spec. Lots @TODO here.
+
+KeyValue: A Dict-like interface to DBAPI2 and other datastores.
 
 
 Contributing
