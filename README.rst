@@ -1,4 +1,31 @@
-Cranial Messaging
+About Cranial
+======================
+
+Cranial is a Framework and Toolkit for building distributed applications and
+microservices in Python, with a "streaming-first" approach to data pipelines,
+and built especially for services delivering predictions from online learning
+models, with a hope to be useful to many kinds of applications.
+
+The machine learning components do not provide algorithms or models like
+SciKitLearn or Tensorflow or Spark or H2O, but instead provide wrappers so that
+models and pipelines created by these tools can be deployed and combined in
+standardized ways.
+
+A slide deck with detailed diagrams of Cranial architecture can be found here:
+https://docs.google.com/presentation/d/131RK79w-Ls7uKuQocDcyEBXWDWABv6fXpaK_1THBG2Y/edit?usp=sharing
+
+Learn about Enterprise Integration Patterns here:
+https://www.enterpriseintegrationpatterns.com/patterns/messaging/Chapter1.html
+
+The Cranial Ontology is now formalized in OWL.
+Canonical: http://ld.chapmanmedia.com/cranial
+Github: https://github.com/tribune/cranial-messaging/blob/master/ontology/cranial
+
+########
+Modules
+########
+
+Messaging
 ====================
 
 Installation
@@ -58,7 +85,7 @@ Distributed Application Tools
 #. Pluggable Service Discovery, initially implemented for Marathon, and a
    a desire to implement peer-to-peer gossip as a default mechanism.
 
-Wrappers/Adapters for common services and protocols
+Wrappers & Adapters for common services and protocols
 ---------------------------------------------------
 #. HTTP
 #. ZeroMQ
@@ -74,29 +101,6 @@ Some Candidates for Future modules?
 Contributions welcome!
 #. Logstash
 #. Redis
-
-About Cranial
-======================
-
-Cranial is a Framework and Toolkit for building distributed applications and
-microservices in Python, with a "streaming-first" approach to data pipelines,
-and built especially for services delivering predictions from online learning
-models, with a hope to be useful to many kinds of applications.
-
-The machine learning components do not provide algorithms or models like
-SciKitLearn or Tensorflow or Spark or H2O, but instead provide wrappers so that
-models and pipelines created by these tools can be deployed and combined in
-standardized ways.
-
-A slide deck with detailed diagrams of Cranial architecture can be found here:
-https://docs.google.com/presentation/d/131RK79w-Ls7uKuQocDcyEBXWDWABv6fXpaK_1THBG2Y/edit?usp=sharing
-
-Learn about Enterprise Integration Patterns here:
-https://www.enterpriseintegrationpatterns.com/patterns/messaging/Chapter1.html
-
-The Cranial Ontology is now formalized in OWL.
-Canonical: http://ld.chapmanmedia.com/cranial
-Github: https://github.com/tribune/cranial-common/blob/master/ontology/cranial
 
 
 Contributing

@@ -1,0 +1,719 @@
+@prefix : <http://ld.chapmanmedia.com/cranial#> .
+@prefix dbr: <http://dbpedia.org/resource/> .
+@prefix owl: <https://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix cogs: <http://vocab.deri.ie/cogs#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@base <http://ld.chapmanmedia.com/cranial> .
+
+<http://ld.chapmanmedia.com/cranial> rdf:type owl:Ontology .
+
+#################################################################
+#    Object Properties
+#################################################################
+
+###  #mayContain
+<#mayContain> rdf:type owl:ObjectProperty .
+
+
+###  #mayContainOne
+<#mayContainOne> rdf:type owl:ObjectProperty ;
+                                                   rdfs:label "May Contain One"@en-us .
+
+
+###  #mayContainOneOrMore
+<#mayContainOneOrMore> rdf:type owl:ObjectProperty ;
+                                                         rdfs:label "May Contain One Or More"@en-us .
+
+
+###  #mustContain
+<#mustContain> rdf:type owl:ObjectProperty .
+
+
+###  #mustContainOne
+<#mustContainOne> rdf:type owl:ObjectProperty ;
+                                                    rdfs:label "mustContainOne"@en-us .
+
+
+###  #mustContainOneOrMore
+<#mustContainOneOrMore> rdf:type owl:ObjectProperty ;
+                                                          rdfs:label "mustContainOneOrMore"@en-us .
+
+
+###  #returnsOutput
+<#returnsOutput> rdf:type owl:ObjectProperty ;
+                                                   rdfs:domain <#CranialObject> ;
+                                                   rdfs:range <#CranialObject> ;
+                                                   rdfs:label "returnsOutput"@en-us .
+
+
+###  #takesInput
+<#takesInput> rdf:type owl:ObjectProperty ;
+                                                rdfs:domain <#CranialObject> ;
+                                                rdfs:range <#CranialObject> ;
+                                                rdfs:label "takesInput"@en-us .
+
+
+###  #takesOptionalInput
+<#takesOptionalInput> rdf:type owl:ObjectProperty ;
+                                                        rdfs:subPropertyOf owl:topObjectProperty ;
+                                                        rdfs:label "takesOptionalInput"@en-us .
+
+
+###  #usesOne
+<#usesOne> rdf:type owl:ObjectProperty ;
+                                             rdfs:subPropertyOf owl:topObjectProperty ;
+                                             rdfs:label "usesOne"@en-us .
+
+
+###  #usesOneOrMore
+<#usesOneOrMore> rdf:type owl:ObjectProperty ;
+                                                   rdfs:subPropertyOf owl:topObjectProperty ;
+                                                   rdfs:label "usesOneOrMore"@en-us .
+
+
+#################################################################
+#    Classes
+#################################################################
+
+###  http://dbpedia.org/resource/Byte_String
+dbr:Byte_String rdf:type owl:Class ;
+                rdfs:label "Byte_String"@en-us .
+
+
+###  http://dbpedia.org/resource/Identifier
+dbr:Identifier rdf:type owl:Class ;
+               rdfs:label "Identifier"@en-us .
+
+
+###  http://dbpedia.org/resource/Iterator
+dbr:Iterator rdf:type owl:Class ;
+             rdfs:label "Iterator"@en-us .
+
+
+###  http://dbpedia.org/resource/Tuple
+dbr:Tuple rdf:type owl:Class ;
+          rdfs:label "Tuple"@en-us .
+
+
+###  http://dbpedia.org/resource/Data_(computing)
+<http://dbpedia.org/resource/Data_(computing)> rdf:type owl:Class ;
+                                               rdfs:label "Data_(computing)"@en-us .
+
+
+###  http://dbpedia.org/resource/Function_(Mathematics)
+<http://dbpedia.org/resource/Function_(Mathematics)> rdf:type owl:Class ;
+                                                     rdfs:label "Function_(Mathematics)"@en-us .
+
+
+###  http://dbpedia.org/resource/Object_(computer_science)
+<http://dbpedia.org/resource/Object_(computer_science)> rdf:type owl:Class ;
+                                                        rdfs:label "Object_(computer_science)"@en-us .
+
+
+###  http://dbpedia.org/resource/Record_(computer_science)
+<http://dbpedia.org/resource/Record_(computer_science)> rdf:type owl:Class ;
+                                                        rdfs:label "Record_(computer_science)"@en-us .
+
+
+###  http://dbpedia.org/resource/Set_(abstract_data_type)
+<http://dbpedia.org/resource/Set_(abstract_data_type)> rdf:type owl:Class ;
+                                                       rdfs:label "Set_(abstract_data_type)"@en-us .
+
+
+###  #Accumulator
+<#Accumulator> rdf:type owl:Class ;
+                                                 rdfs:subClassOf <#CranialObject> ,
+                                                                 [ rdf:type owl:Restriction ;
+                                                                   owl:onProperty <#takesInput> ;
+                                                                   owl:someValuesFrom <#Record>
+                                                                 ] ;
+                                                 rdfs:label "Accumulator"@en-us .
+
+
+###  #Connector
+<#Connector> rdf:type owl:Class ;
+                                               rdfs:subClassOf <#CranialObject> ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#mayContainOne> ;
+                                                                 owl:someValuesFrom <#getMethod>
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#mayContainOne> ;
+                                                                 owl:someValuesFrom <#putMethod>
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#takesOptionalInput> ;
+                                                                 owl:someValuesFrom dbr:Identifier
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#usesOne> ;
+                                                                 owl:someValuesFrom <#Protocol>
+                                                               ] ;
+                                               rdfs:label "Connector"@en-us .
+
+
+###  #CranialObject
+<#CranialObject> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <http://dbpedia.org/resource/Object_(computer_science)> ;
+                                                   rdfs:label "CranialObject"@en-us .
+
+
+###  #Deserializer
+<#Deserializer> rdf:type owl:Class ;
+                                                  rdfs:subClassOf cogs:Transformation ,
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty <#returnsOutput> ;
+                                                                    owl:someValuesFrom <#Deserializer>
+                                                                  ] ,
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty <#takesInput> ;
+                                                                    owl:someValuesFrom <#SerializedRecord>
+                                                                  ] ;
+                                                  rdfs:label "Deserializer"@en-us .
+
+
+###  #Fetcher
+<#Fetcher> rdf:type owl:Class ;
+                                             rdfs:subClassOf <#CranialObject> ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mustContainOne> ;
+                                                               owl:someValuesFrom <#Connector>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mustContainOne> ;
+                                                               owl:someValuesFrom <#SerDe>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#returnsOutput> ;
+                                                               owl:someValuesFrom <#RecordSet>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#takesOptionalInput> ;
+                                                               owl:someValuesFrom dbr:Identifier
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#takesOptionalInput> ;
+                                                               owl:someValuesFrom cogs:Filter
+                                                             ] ;
+                                             rdfs:comment "Actively retrieves a set of Records."^^xsd:string ;
+                                             rdfs:label "Fetcher"@en-us .
+
+
+###  #Label
+<#Label> rdf:type owl:Class ;
+                                           rdfs:subClassOf dbr:Identifier ;
+                                           rdfs:label "Topic Label"@en-us .
+
+
+###  #Listener
+<#Listener> rdf:type owl:Class ;
+                                              rdfs:subClassOf <#CranialObject> ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#mustContainOne> ;
+                                                                owl:someValuesFrom <#SerDe>
+                                                              ] ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#returnsOutput> ;
+                                                                owl:someValuesFrom <#Record>
+                                                              ] ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom dbr:Byte_String
+                                                              ] ;
+                                              rdfs:comment "Passively waits for Records to be handled."^^xsd:string ;
+                                              rdfs:label "Listener"@en-us .
+
+
+###  #LocalTrainer
+<#LocalTrainer> rdf:type owl:Class ;
+                                                  rdfs:subClassOf <#Trainer> ;
+                                                  rdfs:label "LocalTrainer"@en-us .
+
+
+###  #Messenger
+<#Messenger> rdf:type owl:Class ;
+                                               rdfs:subClassOf <#CranialObject> ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#takesInput> ;
+                                                                 owl:someValuesFrom <#Label>
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#takesInput> ;
+                                                                 owl:someValuesFrom <#Record>
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#usesOne> ;
+                                                                 owl:someValuesFrom <#ServiceDiscovery>
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#usesOneOrMore> ;
+                                                                 owl:someValuesFrom <#Notifier>
+                                                               ] ;
+                                               rdfs:comment "Uses Service Discovery to deliver Records to dynamically subscribed Services. Services register which Labels they are interested in, and which Notifiers they understand."^^xsd:string ;
+                                               rdfs:label "Messenger"@en-us .
+
+
+###  #Model
+<#Model> rdf:type owl:Class ;
+                                           rdfs:subClassOf <#CranialObject> ,
+                                                           <#Step> ,
+                                                           cogs:Transformation ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#mayContainOneOrMore> ;
+                                                             owl:someValuesFrom <#State>
+                                                           ] ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#mustContainOneOrMore> ;
+                                                             owl:someValuesFrom <#Step>
+                                                           ] ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#returnsOutput> ;
+                                                             owl:someValuesFrom <#Record>
+                                                           ] ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#takesInput> ;
+                                                             owl:someValuesFrom <#Record>
+                                                           ] ;
+                                           rdfs:comment "Executes an ordered sequence of Steps to enhance or modify a Record, or return a completely different Record."@en-us ;
+                                           rdfs:label "Cranial Model"@en-us .
+
+
+###  #Notifier
+<#Notifier> rdf:type owl:Class ;
+                                              rdfs:subClassOf <#CranialObject> ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom <#Record>
+                                                              ] ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom <#ServiceEndpoint>
+                                                              ] ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#takesInput> ;
+                                                                owl:someValuesFrom <#ServiceIdentifier>
+                                                              ] ,
+                                                              [ rdf:type owl:Restriction ;
+                                                                owl:onProperty <#usesOne> ;
+                                                                owl:someValuesFrom <#Connector>
+                                                              ] ;
+                                              rdfs:label "Notifier"@en-us .
+
+
+###  #NotifierID
+<#NotifierID> rdf:type owl:Class ;
+                                                rdfs:subClassOf dbr:Identifier ;
+                                                rdfs:label "NotifierID"@en-us .
+
+
+###  #NotifierSet
+<#NotifierSet> rdf:type owl:Class ;
+                                                 rdfs:subClassOf <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
+                                                                 [ rdf:type owl:Restriction ;
+                                                                   owl:onProperty <#mayContainOneOrMore> ;
+                                                                   owl:someValuesFrom <#NotifierID>
+                                                                 ] ;
+                                                 rdfs:label "NotifierSet"@en-us .
+
+
+###  #Protocol
+<#Protocol> rdf:type owl:Class ;
+                                              rdfs:label "Protocol"@en-us .
+
+
+###  #Putter
+<#Putter> rdf:type owl:Class ;
+                                            rdfs:subClassOf <#CranialObject> ,
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty <#mustContain> ;
+                                                              owl:someValuesFrom <#Connector>
+                                                            ] ,
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty <#mustContainOne> ;
+                                                              owl:someValuesFrom <#SerDe>
+                                                            ] ,
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty <#takesInput> ;
+                                                              owl:someValuesFrom <#RecordSet>
+                                                            ] ,
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty <#takesOptionalInput> ;
+                                                              owl:someValuesFrom dbr:Identifier
+                                                            ] ;
+                                            rdfs:comment "Writes a set of records to an external location."^^xsd:string ;
+                                            rdfs:label "Putter"@en-us .
+
+
+###  #Record
+<#Record> rdf:type owl:Class ;
+                                            rdfs:subClassOf <http://dbpedia.org/resource/Record_(computer_science)> ,
+                                                            <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
+                                                            <#CranialObject> ,
+                                                            [ rdf:type owl:Restriction ;
+                                                              owl:onProperty <#mayContainOneOrMore> ;
+                                                              owl:someValuesFrom <#RecordTuple>
+                                                            ] ;
+                                            rdfs:comment "A set of Key-Value pairs, each typically being a string mapped to a Vector, for example, a Python Dict object."@en-us ;
+                                            rdfs:label "Cranial Record"@en-us .
+
+
+###  #RecordSet
+<#RecordSet> rdf:type owl:Class ;
+                                               rdfs:subClassOf dbr:Iterator ,
+                                                               <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
+                                                               <#CranialObject> ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#mayContainOneOrMore> ;
+                                                                 owl:someValuesFrom <#Record>
+                                                               ] ;
+                                               rdfs:label "RecordSet"@en-us .
+
+
+###  #RecordStream
+<#RecordStream> rdf:type owl:Class ;
+                                                  rdfs:subClassOf <#RecordSet> ;
+                                                  rdfs:label "Record Stream"@en-us .
+
+
+###  #RecordTuple
+<#RecordTuple> rdf:type owl:Class ;
+                                                 rdfs:subClassOf dbr:Tuple ,
+                                                                 [ rdf:type owl:Restriction ;
+                                                                   owl:onProperty <#mustContainOne> ;
+                                                                   owl:someValuesFrom dbr:Identifier
+                                                                 ] ,
+                                                                 [ rdf:type owl:Restriction ;
+                                                                   owl:onProperty <#mustContainOne> ;
+                                                                   owl:someValuesFrom <http://dbpedia.org/resource/Data_(computing)>
+                                                                 ] ;
+                                                 rdfs:label "RecordTuple"@en-us .
+
+
+###  #RemoteTrainer
+<#RemoteTrainer> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <#Trainer> ,
+                                                                   [ rdf:type owl:Restriction ;
+                                                                     owl:onProperty <#mustContainOne> ;
+                                                                     owl:someValuesFrom <#Notifier>
+                                                                   ] ;
+                                                   rdfs:label "RemoteTrainer"@en-us .
+
+
+###  #RemoteTrainerService
+<#RemoteTrainerService> rdf:type owl:Class ;
+                                                          rdfs:subClassOf <#Service> ,
+                                                                          <#Trainer> ,
+                                                                          [ rdf:type owl:Restriction ;
+                                                                            owl:onProperty <#mustContainOneOrMore> ;
+                                                                            owl:someValuesFrom <#Listener>
+                                                                          ] ,
+                                                                          [ rdf:type owl:Restriction ;
+                                                                            owl:onProperty <#mustContainOneOrMore> ;
+                                                                            owl:someValuesFrom <#LocalTrainer>
+                                                                          ] ;
+                                                          rdfs:label "RemoteTrainerService"@en-us .
+
+
+###  #Scheduler
+<#Scheduler> rdf:type owl:Class ;
+                                               rdfs:subClassOf <#CranialObject> ;
+                                               rdfs:label "Scheduler"@en-us .
+
+
+###  #SerDe
+<#SerDe> rdf:type owl:Class ;
+                                           rdfs:subClassOf <#CranialObject> ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#mustContainOne> ;
+                                                             owl:someValuesFrom <#Deserializer>
+                                                           ] ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#mustContainOne> ;
+                                                             owl:someValuesFrom <#Serializer>
+                                                           ] ;
+                                           rdfs:comment "Transforms a Record between the software's native representation and a representation that can be sent across a network connection or written to external storage."^^xsd:string ;
+                                           rdfs:label "SerDe"@en-us .
+
+
+###  #SerializedRecord
+<#SerializedRecord> rdf:type owl:Class ;
+                                                      rdfs:subClassOf <#Record> ,
+                                                                      [ rdf:type owl:Restriction ;
+                                                                        owl:onProperty <#mustContainOne> ;
+                                                                        owl:someValuesFrom dbr:Byte_String
+                                                                      ] ;
+                                                      rdfs:comment "A Record represented as a byte-string suitable for writing to an external location."@en-us ;
+                                                      rdfs:label "SerializedRecord"@en-us .
+
+
+###  #SerializedRecordSet
+<#SerializedRecordSet> rdf:type owl:Class ;
+                                                         rdfs:subClassOf <#RecordSet> ,
+                                                                         [ rdf:type owl:Restriction ;
+                                                                           owl:onProperty <#mayContainOneOrMore> ;
+                                                                           owl:someValuesFrom <#SerializedRecord>
+                                                                         ] ;
+                                                         rdfs:label "SerializedRecordSet"@en-us .
+
+
+###  #Serializer
+<#Serializer> rdf:type owl:Class ;
+                                                rdfs:subClassOf cogs:Transformation ,
+                                                                [ rdf:type owl:Restriction ;
+                                                                  owl:onProperty <#returnsOutput> ;
+                                                                  owl:someValuesFrom <#SerializedRecord>
+                                                                ] ,
+                                                                [ rdf:type owl:Restriction ;
+                                                                  owl:onProperty <#takesInput> ;
+                                                                  owl:someValuesFrom <#Record>
+                                                                ] ;
+                                                rdfs:label "Serializer"@en-us .
+
+
+###  #Service
+<#Service> rdf:type owl:Class ;
+                                             rdfs:subClassOf <#CranialObject> ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mayContainOneOrMore> ;
+                                                               owl:someValuesFrom <#Model>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mustContain> ;
+                                                               owl:someValuesFrom <#ServiceIdentifier>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mustContainOneOrMore> ;
+                                                               owl:someValuesFrom <#ServiceEndpoint>
+                                                             ] ;
+                                             rdfs:label "Service"@en-us .
+
+
+###  #ServiceDiscovery
+<#ServiceDiscovery> rdf:type owl:Class ;
+                                                      rdfs:subClassOf <#CranialObject> ,
+                                                                      cogs:Service ,
+                                                                      [ rdf:type owl:Restriction ;
+                                                                        owl:onProperty <#mustContainOne> ;
+                                                                        owl:someValuesFrom <#NotifierSet>
+                                                                      ] ,
+                                                                      [ rdf:type owl:Restriction ;
+                                                                        owl:onProperty <#returnsOutput> ;
+                                                                        owl:someValuesFrom <#ServiceSet>
+                                                                      ] ,
+                                                                      [ rdf:type owl:Restriction ;
+                                                                        owl:onProperty <#takesOptionalInput> ;
+                                                                        owl:someValuesFrom <#Label>
+                                                                      ] ;
+                                                      rdfs:label "ServiceDiscovery"@en-us .
+
+
+###  #ServiceEndpoint
+<#ServiceEndpoint> rdf:type owl:Class ;
+                                                     rdfs:label "ServiceEndpoint"@en-us .
+
+
+###  #ServiceIdentifier
+<#ServiceIdentifier> rdf:type owl:Class ;
+                                                       rdfs:subClassOf dbr:Identifier ;
+                                                       rdfs:label "ServiceIdentifier"@en-us .
+
+
+###  #ServiceSet
+<#ServiceSet> rdf:type owl:Class ;
+                                                rdfs:subClassOf <http://dbpedia.org/resource/Set_(abstract_data_type)> ,
+                                                                [ rdf:type owl:Restriction ;
+                                                                  owl:onProperty <#mayContainOneOrMore> ;
+                                                                  owl:someValuesFrom <#ServiceTuple>
+                                                                ] ;
+                                                rdfs:label "ServiceSet"@en-us .
+
+
+###  #ServiceTuple
+<#ServiceTuple> rdf:type owl:Class ;
+                                                  rdfs:subClassOf dbr:Tuple ,
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty <#mustContainOne> ;
+                                                                    owl:someValuesFrom <#NotifierID>
+                                                                  ] ,
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty <#mustContainOne> ;
+                                                                    owl:someValuesFrom <#ServiceEndpoint>
+                                                                  ] ,
+                                                                  [ rdf:type owl:Restriction ;
+                                                                    owl:onProperty <#mustContainOne> ;
+                                                                    owl:someValuesFrom <#ServiceIdentifier>
+                                                                  ] ;
+                                                  rdfs:label "ServiceTuple"@en-us .
+
+
+###  #State
+<#State> rdf:type owl:Class ;
+
+                                           rdfs:subClassOf <#CranialObject> ,
+                                                           [ rdf:type owl:Restriction ;
+                                                             owl:onProperty <#mayContain> ;
+                                                             owl:someValuesFrom <http://dbpedia.org/resource/Data_(computing)>
+                                                           ] ;
+                                           rdfs:comment "Any data used by a StatefulModel to make Transformations."^^xsd:string ;
+                                           rdfs:label "State"@en-us .
+
+
+###  #StatefulModel
+<#StatefulModel> rdf:type owl:Class ;
+                                                   rdfs:subClassOf <#Model> ,
+                                                                   [ rdf:type owl:Restriction ;
+                                                                     owl:onProperty <#mayContainOneOrMore> ;
+                                                                     owl:someValuesFrom <#Trainer>
+                                                                   ] ,
+                                                                   [ rdf:type owl:Restriction ;
+                                                                     owl:onProperty <#mustContainOne> ;
+                                                                     owl:someValuesFrom <#State>
+                                                                   ] ;
+                                                   rdfs:comment "A Model with a State."@en-us ;
+                                                   rdfs:label "StatefulModel"@en-us .
+
+
+###  #Step
+<#Step> rdf:type owl:Class ;
+                                          rdfs:subClassOf <http://dbpedia.org/resource/Function_(Mathematics)> ,
+                                                          <#CranialObject> ,
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty <#returnsOutput> ;
+                                                            owl:someValuesFrom <#Record>
+                                                          ] ,
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty <#takesInput> ;
+                                                            owl:someValuesFrom <#Record>
+                                                          ] ,
+                                                          [ rdf:type owl:Restriction ;
+                                                            owl:onProperty <#takesOptionalInput> ;
+                                                            owl:someValuesFrom <#State>
+                                                          ] ;
+                                          rdfs:comment "An operation on a Record that can be executed by a Model."^^xsd:string ;
+                                          rdfs:label "Step"@en-us .
+
+
+###  #Trainer
+<#Trainer> rdf:type owl:Class ;
+                                             rdfs:subClassOf <#CranialObject> ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mayContainOneOrMore> ;
+                                                               owl:someValuesFrom <#Accumulator>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#mustContainOne> ;
+                                                               owl:someValuesFrom <#Scheduler>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#returnsOutput> ;
+                                                               owl:someValuesFrom <#State>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#takesInput> ;
+                                                               owl:someValuesFrom <#RecordStream>
+                                                             ] ,
+                                                             [ rdf:type owl:Restriction ;
+                                                               owl:onProperty <#takesInput> ;
+                                                               owl:someValuesFrom <#State>
+                                                             ] ;
+                                             rdfs:label "Trainer"@en-us .
+
+
+###  #getMethod
+<#getMethod> rdf:type owl:Class ;
+                                               rdfs:subClassOf cogs:Method ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#returnsOutput> ;
+                                                                 owl:someValuesFrom <#SerializedRecordSet>
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#takesOptionalInput> ;
+                                                                 owl:someValuesFrom dbr:Identifier
+                                                               ] ;
+                                               rdfs:label "getMethod"@en-us .
+
+
+###  #putMethod
+<#putMethod> rdf:type owl:Class ;
+                                               rdfs:subClassOf cogs:Method ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#takesInput> ;
+                                                                 owl:someValuesFrom dbr:Identifier
+                                                               ] ,
+                                                               [ rdf:type owl:Restriction ;
+                                                                 owl:onProperty <#takesOptionalInput> ;
+                                                                 owl:someValuesFrom <#SerializedRecordSet>
+                                                               ] ;
+                                               rdfs:label "putMethod"@en-us .
+
+
+###  http://vocab.deri.ie/cogs#Filter
+cogs:Filter rdf:type owl:Class ;
+            rdfs:label "Filter"@en-us .
+
+
+###  http://vocab.deri.ie/cogs#Method
+cogs:Method rdf:type owl:Class ;
+            rdfs:label "Method"@en-us .
+
+
+###  http://vocab.deri.ie/cogs#Service
+cogs:Service rdf:type owl:Class ;
+             rdfs:label "Service"@en-us .
+
+
+###  http://vocab.deri.ie/cogs#Transformation
+cogs:Transformation rdf:type owl:Class ;
+                    rdfs:label "Transformation"@en-us .
+
+
+#################################################################
+#    Individuals
+#################################################################
+
+###  #GoogleCloudStorage
+<#GoogleCloudStorage> rdf:type owl:NamedIndividual ,
+                                                                 <#Protocol> ;
+                                                        rdfs:label "GoogleCloudStorage"@en-us .
+
+
+###  #HTTP
+<#HTTP> rdf:type owl:NamedIndividual ,
+                                                   <#Protocol> ;
+                                          rdfs:label "HTTP"@en-us .
+
+
+###  #Kafka
+<#Kafka> rdf:type owl:NamedIndividual ,
+                                                    <#Protocol> ;
+                                           rdfs:label "Kafka"@en-us .
+
+
+###  #LocalFilesystem
+<#LocalFilesystem> rdf:type owl:NamedIndividual ,
+                                                              <#Protocol> ;
+                                                     rdfs:label "LocalFilesystem"@en-us .
+
+
+###  #PythonDBAPI
+<#PythonDBAPI> rdf:type owl:NamedIndividual ,
+                                                          <#Protocol> ;
+                                                 rdfs:label "PythonDBAPI"@en-us .
+
+
+###  #S3
+<#S3> rdf:type owl:NamedIndividual ,
+                                                 <#Protocol> ;
+                                        rdfs:label "S3"@en-us .
+
+
+###  #ZMQ
+<#ZMQ> rdf:type owl:NamedIndividual ,
+                                                  <#Protocol> ;
+                                         rdfs:label "ZMQ"@en-us .
+
+
+###  Generated by the OWL API (version 4.5.6) https://github.com/owlcs/owlapi
