@@ -1,4 +1,31 @@
-Cranial Messaging
+About Cranial
+======================
+
+Cranial is a Framework and Toolkit for building distributed applications and
+microservices in Python, with a "streaming-first" approach to data pipelines,
+and built especially for services delivering predictions from online learning
+models, with a hope to be useful to many kinds of applications.
+
+The machine learning components do not provide algorithms or models like
+SciKitLearn or Tensorflow or Spark or H2O, but instead provide wrappers so that
+models and pipelines created by these tools can be deployed and combined in
+standardized ways.
+
+A slide deck with detailed diagrams of Cranial architecture can be found here:
+https://docs.google.com/presentation/d/131RK79w-Ls7uKuQocDcyEBXWDWABv6fXpaK_1THBG2Y/edit?usp=sharing
+
+Learn about Enterprise Integration Patterns here:
+https://www.enterpriseintegrationpatterns.com/patterns/messaging/Chapter1.html
+
+The Cranial Ontology is now formalized in OWL.
+Canonical: http://ld.chapmanmedia.com/cranial
+Github: https://github.com/tribune/cranial-messaging/blob/master/ontology/cranial
+
+########
+Modules
+########
+
+Messaging Module
 ====================
 
 Installation
@@ -58,7 +85,7 @@ Distributed Application Tools
 #. Pluggable Service Discovery, initially implemented for Marathon, and a
    a desire to implement peer-to-peer gossip as a default mechanism.
 
-Wrappers/Adapters for common services and protocols
+Wrappers & Adapters for common services and protocols
 ---------------------------------------------------
 #. HTTP
 #. ZeroMQ
@@ -69,34 +96,25 @@ Wrappers/Adapters for common services and protocols
 #. Apache Mesos and Marathon
 
 
-Some Candidates for Future modules?
+Some Candidates for Future Notifier sub-modules?
 -----------------------------------
 Contributions welcome!
 #. Logstash
 #. Redis
 
-About Cranial
+
+Datastore Module
 ======================
 
-Cranial is a Framework and Toolkit for building distributed applications and
-microservices in Python, with a "streaming-first" approach to data pipelines,
-and built especially for services delivering predictions from online learning
-models, with a hope to be useful to many kinds of applications.
+Sub-components:
 
-The machine learning components do not provide algorithms or models like
-SciKitLearn or Tensorflow or Spark or H2O, but instead provide wrappers so that
-models and pipelines created by these tools can be deployed and combined in
-standardized ways.
+Adapters: Wrappers to standardize interfaces to datastores.
 
-A slide deck with detailed diagrams of Cranial architecture can be found here:
-https://docs.google.com/presentation/d/131RK79w-Ls7uKuQocDcyEBXWDWABv6fXpaK_1THBG2Y/edit?usp=sharing
+Fetchers: Utilities for transferring Bytes or Records between different
+datastores, or between datastores and services. The current implementation 
+does not match the OWL spec. Lots @TODO here.
 
-Learn about Enterprise Integration Patterns here:
-https://www.enterpriseintegrationpatterns.com/patterns/messaging/Chapter1.html
-
-The Cranial Ontology is now formalized in OWL.
-Canonical: http://ld.chapmanmedia.com/cranial
-Github: https://github.com/tribune/cranial-common/blob/master/ontology/cranial
+KeyValue: A Dict-like interface to DBAPI2 and other datastores.
 
 
 Contributing

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "cranial-messaging"
-version = "0.4.0.dev4"
+version = "0.5.0"
 description = "Abstractions for high-level communication between micro-services."
 authors = ["Matt Chapman et al. <Matt@NinjitsuWeb.com>"]
 license = "GPL-3.0+"
@@ -23,7 +23,6 @@ recordclass = "^0.11.1"
 requests-futures = "^0.9.7"
 ujson = "^1.3.5"
 zmq = "^0.0.0"
-
 
 
 [tool.poetry.dev-dependencies]
