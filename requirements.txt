@@ -13,4 +13,3 @@ smart_open>=1.8.3
 toolz>=0.8
 urllib3>=1.22
 zmq>=0.0.0
-cranial-common>=0.3.0
