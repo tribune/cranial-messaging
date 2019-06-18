@@ -117,7 +117,28 @@ does not match the OWL spec. Lots @TODO here.
 KeyValue: A Dict-like interface to DBAPI2 and other datastores.
 
 
-Contributing
-============
+################
+# Contributing #
+################
 Questions, Suggestions, Support requests, trouble reports, and of course,
 Pull Requests, are all welcome in the Github issue queue.
+
+Starting Development
+====================
+
+# Create & activate  a virtual environment wiht the tool of your choice, for example:
+    $ mkdir cranial-dev && cd cranial-dev
+    $ virtualenv -p python3 venv && source venv/bin/activate
+
+# You may need to install poetry seperately for the present:
+    $ pip install poetry
+
+# Get the source code in editable form:
+    $ pip install -e git+ssh://git@github.com/tribune/cranial-messaging#egg=cranial-messaging
+
+# Ignore the error about missing set-up; instead change to where your source is stored:
+    $ cd venv/src/cranial-messaging
+
+# ...and run
+    $ poetry install
+
