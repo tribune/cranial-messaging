@@ -163,9 +163,6 @@ NOTIFIER_PARAMS = {'package': 'cranial.messaging', 'class': 'Notifier'}
 def target_builder(params: Dict,
                    uri: str = ''
                    ) -> Callable[[Notifier, int, float, int], NotifierQuad]:
-    refresh = params.get('refresh') or config.get('refresh')
-    by_time = refresh and refresh.endswith('sec')
-    refresh = refresh and int(refresh.replace('sec', ''))
     if type(params) is str:
         # It's a filename
         params = {'module': 'file',
@@ -173,6 +170,9 @@ def target_builder(params: Dict,
                   'endpoint': params,
                   'path': params,
                   **NOTIFIER_PARAMS}
+    refresh = params.get('refresh') or config.get('refresh')
+    by_time = refresh and refresh.endswith('sec')
+    refresh = refresh and int(refresh.replace('sec', ''))
     sep = params.get('separator') or config.get('separator', '')
     extfmt = '{}' + sep + '{}' + (params.get('ext') or config.get('ext', ''))
 
