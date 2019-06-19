@@ -68,7 +68,7 @@ class Notifier(base.Notifier):
                     e, endpoint, message))
 
     def finish(self):
-        [fh.flush for fh in self.logfiles.values() if not fh.closed]
+        [fh.flush() for fh in self.logfiles.values() if not fh.closed]
 
     def __del__(self):
         for _, fh in self.logfiles.items():
