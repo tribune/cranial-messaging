@@ -21,26 +21,26 @@ The Cranial Ontology is now formalized in OWL.
 Canonical: http://ld.chapmanmedia.com/cranial
 Github: https://github.com/tribune/cranial-messaging/blob/master/ontology/cranial
 
-########
+
 Modules
-########
+=======
 
 Messaging Module
-====================
+----------------
 
 Installation
-------------
-The PyPI packages are probably out-of-date. Install from Github to be able to
-run examples in this file.
+^^^^^^^^^^^^
+The PyPI packages are possibly out-of-date. Install from Github to be able to
+run latest examples.
 
 
 What is it? A Library...
----------
+^^^^^^^^^^^^^^^^^^^^^^^^
 Modules for reading and writing data from various sources, built
 with a "streaming-first" approach.
 
 What is it? A universal pipe application...
-----------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Provides a utility that listens for messages at some URI and relays them to
 some target. Currently optimized for user convenience and development speed
 over run-time performance.
@@ -77,7 +77,7 @@ Try:
 
 
 Distributed Application Tools
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #. "Messengers" (a.k.a Publishers) "Notifiers" (a.k.a. Transports) and
    "Listeners" (a.k.a. Subscribers) for asynchronous remote message passing,
    suitable for implementing Actor & Enterprise Integration Patterns.
@@ -86,7 +86,7 @@ Distributed Application Tools
    a desire to implement peer-to-peer gossip as a default mechanism.
 
 Wrappers & Adapters for common services and protocols
----------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #. HTTP
 #. ZeroMQ
 #. Kafka
@@ -97,14 +97,14 @@ Wrappers & Adapters for common services and protocols
 
 
 Some Candidates for Future Notifier sub-modules?
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Contributions welcome!
 #. Logstash
 #. Redis
 
 
 Datastore Module
-======================
+----------------
 
 Sub-components:
 
@@ -117,28 +117,26 @@ does not match the OWL spec. Lots @TODO here.
 KeyValue: A Dict-like interface to DBAPI2 and other datastores.
 
 
-################
-# Contributing #
-################
+Contributing
+============
+
 Questions, Suggestions, Support requests, trouble reports, and of course,
 Pull Requests, are all welcome in the Github issue queue.
 
 Starting Development
-====================
+--------------------
 
-# Create & activate  a virtual environment wiht the tool of your choice, for example:
+e.g.::
+
+    # Clone the source code in editable form
+    $ git clone git@github.com/tribune/cranial-messaging
+    
+    # Create & activate  a virtual environment wiht the tool of your choice, for example::
     $ mkdir cranial-dev && cd cranial-dev
     $ virtualenv -p python3 venv && source venv/bin/activate
 
-# You may need to install poetry seperately for the present:
+    # You may need to install poetry manually:
     $ pip install poetry
 
-# Get the source code in editable form:
-    $ pip install -e git+ssh://git@github.com/tribune/cranial-messaging#egg=cranial-messaging
-
-# Ignore the error about missing set-up; instead change to where your source is stored:
-    $ cd venv/src/cranial-messaging
-
-# ...and run
+    # ...and then run
     $ poetry install
-
