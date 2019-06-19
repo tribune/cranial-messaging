@@ -26,3 +26,8 @@ zmq = "^0.0.0"
 [tool.poetry.dev-dependencies]
 pytest = ">=3.2"
 poetry = ">=0.12.16"
+google-cloud-storage = "^1.16.1"
+cassandra-driver = "^3.18.0"
+celery = "^4.3.0"
+aioetcd3 = "^1.10"
+confluent-kafka = "^1.0.1"

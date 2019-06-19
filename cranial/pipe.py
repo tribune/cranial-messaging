@@ -119,33 +119,6 @@ if config.get('debug'):
     logging.setLevel('INFO')
     print(config.get())
 
-try:
-    listener = config.factory(
-        {**config.get('listener'),
-         **{'package': 'cranial.listeners', 'class': 'Listener'}})
-except TypeError as e:
-    listener = config.get('listener')
-    if type(listener) is str:
-        # Maybe it's a filename?
-        listener = dieIf("Listener not properly configured",
-                         config.factory,
-                         {'package': 'cranial.listeners',
-                          'module': 'file',
-                          'class': 'Listener',
-                          'path': listener})
-    else:
-        raise(e)
-except ModuleNotFoundError:
-    listener_str = config.get('listener_str')
-    logging.info('Trying smart_open for URI: %s', listener_str)
-    listener = dieIf("Listener not properly configured",
-                     config.factory,
-                     {**config.get('listener'),
-                      **{'package': 'cranial.listeners',
-                         'class': 'Listener',
-                         'module': 'file',
-                         'path': listener_str}})
-
 
 class NotifierTracker(RecordClass):
     target: Optional[Notifier]
@@ -252,84 +225,115 @@ def cacheable_send(target: Notifier, params: dict, message: Message):
         return target.send(**params)
 
 
-sleep_time = config.get('sleep', 1)
+def main():
+    sleep_time = config.get('sleep', 1)
 
-try:
-    last_id = int(config.get('listener', {}).get('last_id', 0))
-except AttributeError:
-    last_id = int(config.get('last_id', 0))
-
-now = time()
-pipeline = []  # type: List[NotifierTracker]
-for p in config.get('pipeline', []):
-    uri = ''
-    if isinstance(p, str):
-        uri = p
-        p = config.parse_uri(p)
-    pipeline.append(NotifierTracker(
-        None, target_builder(p, uri), 0, now, last_id))
-
-params = config.get('target', {'module': 'stdout'})  # type: Dict
-get_target = target_builder(params, config.get('target_str'))
-pipeline.append(NotifierTracker(None, get_target, 0, now, last_id))
-
-
-# @TODO Use importlib to config by string
-serde = json
-
-if config.get('debug'):
-    timer = time()
-while True:  # noqa
     try:
-        message = Message(listener.recv(), serde=serde)
+        listener = config.factory(
+            {**config.get('listener', {}),
+             **{'package': 'cranial.listeners', 'class': 'Listener'}})
+    except TypeError as e:
+        listener = config.get('listener')
+        if type(listener) is str:
+            # Maybe it's a filename?
+            listener = dieIf("Listener not properly configured",
+                             config.factory,
+                             {'package': 'cranial.listeners',
+                              'module': 'file',
+                              'class': 'Listener',
+                              'path': listener})
+        else:
+            raise(e)
+    except ModuleNotFoundError:
+        listener_str = config.get('listener_str')
+        logging.info('Trying smart_open for URI: %s', listener_str)
+        listener = dieIf("Listener not properly configured",
+                         config.factory,
+                         {**config.get('listener'),
+                          **{'package': 'cranial.listeners',
+                             'class': 'Listener',
+                             'module': 'file',
+                             'path': listener_str}})
 
-        if config.get('echo', False):
-            print(message.str().strip())
-        if not config.get('include_empty') and message.str().strip() == '':
-            continue
-    except StopIteration:
-        break
+    try:
+        last_id = int(config.get('listener', {}).get('last_id', 0))
+    except AttributeError:
+        last_id = int(config.get('last_id', 0))
 
-    if message.raw:
-        logging.debug('Received Message: %s', message)
+    now = time()
+    pipeline = []  # type: List[NotifierTracker]
+    for p in config.get('pipeline', []):
+        uri = ''
+        if isinstance(p, str):
+            uri = p
+            p = config.parse_uri(p)
+        pipeline.append(NotifierTracker(
+            None, target_builder(p, uri), 0, now, last_id))
 
-        # Sending...
-        for nt in pipeline:  # type: NotifierTracker
-            nt.target, params, nt.msg_count, nt.connect_time = nt.builder(
-                nt.target, nt.msg_count, nt.connect_time, nt.last_id)
-            nt.msg_count += 1
-            params['message'] = message.str()
-            response = cacheable_send(nt.target, params, message)
-            if response and config.get('response', False):
-                print(response)
+    params = config.get('target', {'module': 'stdout'})  # type: Dict
+    get_target = target_builder(params, config.get('target_str'))
+    pipeline.append(NotifierTracker(None, get_target, 0, now, last_id))
 
-            try:
-                # @TODO this is probably slowing us down unnecessarly, and it's
-                # ugly.
-                nt.last_id = message.dict().get(
-                    config.get('key', 'id')) or nt.last_id
-            except (TypeError, ValueError) as e:
-                # Message is probably not converatble to a dict.
-                if config.get('debug'):
-                    print('Message is not a record?: {}'.format(e))
-                pass
+    # @TODO Use importlib to config by string
+    serde = json
 
-            if response and config.get('update'):
-                message = message_update(message, Message(response))
-            elif response:
-                message = Message(response)
+    if config.get('debug'):
+        timer = time()
+    while True:  # noqa
+        try:
+            message = Message(listener.recv(), serde=serde)
 
-        if config.get('update') and config.get('response'):
-            print(message.str())
+            if config.get('echo', False):
+                print(message.str().strip())
+            if not config.get('include_empty') and message.str().strip() == '':
+                continue
+        except StopIteration:
+            break
 
-        # End sending.
-        sleep_count = 0
-    else:
-        sleep(sleep_time)
-        sleep_count += 1
-        if sleep_count % 5 == 0:
-            logging.debug("No messages for %s seconds",
-                          sleep_count * sleep_time)
+        if message.raw:
+            logging.debug('Received Message: %s', message)
 
-if config.get('debug'):
-    print('Loop time: {}'.format(time() - timer))
+            # Sending...
+            for nt in pipeline:  # type: NotifierTracker
+                nt.target, params, nt.msg_count, nt.connect_time = nt.builder(
+                    nt.target, nt.msg_count, nt.connect_time, nt.last_id)
+                nt.msg_count += 1
+                params['message'] = message.str()
+                response = cacheable_send(nt.target, params, message)
+                if response and config.get('response', False):
+                    print(response)
+
+                try:
+                    # @TODO this is probably slowing us down unnecessarly, and it's
+                    # ugly.
+                    nt.last_id = message.dict().get(
+                        config.get('key', 'id')) or nt.last_id
+                except (TypeError, ValueError) as e:
+                    # Message is probably not converatble to a dict.
+                    if config.get('debug'):
+                        print('Message is not a record?: {}'.format(e))
+                    pass
+
+                if response and config.get('update'):
+                    message = message_update(message, Message(response))
+                elif response:
+                    message = Message(response)
+
+            if config.get('update') and config.get('response'):
+                print(message.str())
+
+            # End sending.
+            sleep_count = 0
+        else:
+            sleep(sleep_time)
+            sleep_count += 1
+            if sleep_count % 5 == 0:
+                logging.debug("No messages for %s seconds",
+                              sleep_count * sleep_time)
+
+    if config.get('debug'):
+        print('Loop time: {}'.format(time() - timer))
+
+
+if __name__ == '__main__':
+    main()
