@@ -2,6 +2,7 @@ from datetime import datetime
 import io
 import os
 from tempfile import mkstemp
+from typing import List, IO  # noqa
 
 from cranial.connectors import base
 from cranial.common import logger
@@ -11,7 +12,9 @@ log = logger.get(name='local_fetchers')  # streaming log
 
 def file_readlines(fp, delete_after=False):
     """
-    memory efficient iterator to read lines from a file (readlines() method reads whole file)
+    memory efficient iterator to read lines from a file (readlines() method
+    reads whole file)
+
     Parameters
     ----------
     fp
@@ -38,14 +41,16 @@ def file_readlines(fp, delete_after=False):
 
 
 class Connector(base.Connector):
-    def __init__(self, path: str = '', binary=True, do_read=False) -> None:
-        super().__init__(base_address=path, binary=binary, do_read=do_read)
-        self._open_files = []  # type: List[FileHandle]
+    def __init__(self, path: str = '', binary=True) -> None:
+        super().__init__(base_address=path, binary=binary)
+        self._open_files = []  # type: List[IO]
 
     def get(self, name=None):
+        # @TODO why?
         if name.startswith('/'):
             name = name[1:]
-        filepath = self.base_address if name is None else os.path.join(self.base_address, name)
+        filepath = self.base_address if name is None else os.path.join(
+            self.base_address, name)
         try:
             mode = 'rb' if self.binary else 'r'
             fh = open(filepath, mode)
@@ -57,18 +62,18 @@ class Connector(base.Connector):
             log.info("Opened \t{}".format(filepath))
 
         except Exception as e:
+            # @TODO I don't remember why we thought this was a good idea.
+            # We should probably raise most Exceptions.
             log.error("{}\tbase_address={}\tname={}\tfilepath={}".format(
                 e, self.base_address, name, filepath))
             res = io.BytesIO() if self.binary else io.StringIO()
-
-        if self.do_read:
-            res = res.read()
 
         return res
 
     def put(self, source, name: str = None) -> bool:
 
-        filepath = self.base_address if name is None else os.path.join(self.base_address, name)
+        filepath = self.base_address if name is None else os.path.join(
+            self.base_address, name)
         dir_path = os.path.split(filepath)[0]
         if len(dir_path) > 0:
             os.makedirs(dir_path, exist_ok=True)
@@ -78,7 +83,9 @@ class Connector(base.Connector):
         elif isinstance(source, (str, bytes)):
             pass
         else:
-            log.error('Source should be either a string, bytes or a readable buffer, got {}'.format(type(source)))
+            log.error('Source should be either a string, bytes or a readable'
+                      ' buffer, got {}'.format(
+                          type(source)))
             return False
 
         try:
@@ -95,11 +102,12 @@ class Connector(base.Connector):
             return True
 
         except Exception as e:
-            log.error("{}\tbase_address={}\tname={}".format(e, self.base_address, name))
+            log.error("{}\tbase_address={}\tname={}".format(
+                e, self.base_address, name))
             return False
 
     def get_tmp_file(self):
-        fd, local_path = mkstemp(dir=self.base_address)
+        fd, local_path = mkstemp()
         os.close(fd)
         return fd, local_path
 

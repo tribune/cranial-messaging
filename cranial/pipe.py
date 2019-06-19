@@ -311,7 +311,7 @@ while True:  # noqa
             except (TypeError, ValueError) as e:
                 # Message is probably not converatble to a dict.
                 if config.get('debug'):
-                    print(e)
+                    print('Message is not a record?: {}'.format(e))
                 pass
 
             if response and config.get('update'):
