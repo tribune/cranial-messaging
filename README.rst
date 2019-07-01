@@ -21,6 +21,8 @@ The Cranial Ontology is now formalized in OWL.
 Canonical: http://ld.chapmanmedia.com/cranial
 Github: https://github.com/tribune/cranial-messaging/blob/master/ontology/cranial
 
+.. image:: cranial-architecture.svg
+
 
 Modules
 =======
