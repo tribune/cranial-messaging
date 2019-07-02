@@ -2,12 +2,9 @@ import json
 import os
 from typing import Dict, IO  # noqa
 
-from smart_open import open
-
 from cranial.messaging import base
 from cranial.common import logger
 from cranial.connectors import FileConnector
-# from cranial.connectors import file
 
 log = logger.get()
 

@@ -108,3 +108,7 @@ venv.bak/
 # Editor files
 *~
 *.sw[po]
+
+.aws
+.DS_Store
+pip-wheel-metadata
