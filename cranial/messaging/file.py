@@ -70,6 +70,45 @@ class Notifier(base.Notifier):
                 "{} || endpoint: {} || message: {}".format(
                     e, endpoint, message))
 
+    def get_last_id(self, endpoint: str = '', sep: str = '', bucket: str = None,
+                    prefix: str = None):
+        """ Takes an S3 endpoint and the seperator used in naming files
+            gets all the files at the prefix in the given endpoint
+            gets the most recently modified file with an id
+            reads the last row from that file and returns that id as the
+            last_id
+        """
+        if sep == '':
+            raise Exception("Need seperator to parse last_id from file names")
+
+        # todo try to use FileConnector to get all keys then sort by datetime
+        #   then return key. Actually use reduce
+        # from config get endpoint
+        # endpoint = params.get('endpoint', params.get('path', ''))
+
+        # get all keys in bucket with connector
+        keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix)
+        # sort by last modified
+        sorted_keys = sorted(keys, key=lambda item: item['LastModified'], reverse=True)
+        # for each item tey to get the last id by
+        #   splitting by sep and getting the last item in array
+        #   if number we good
+        last_file_key = ''
+        for key in sorted_keys:
+            if key['Key'].split(sep)[-1].split('.')[0].isdigit():
+                last_file_key = key['Key']
+                break
+        #   read in that file get then get last id in the file
+        if last_file_key is not '':
+            base = 's3://' + endpoint.split('//')[1].split('/')[0] + '/'
+            last_file = FileConnector(base + last_file_key).get().read()
+            last_row = json.loads(last_file.split('\n')[-2])
+            # todo dynmically tell what key id is under or pass it in
+            # last_id = last_row['']
+            last_id = list(last_row.values())[0]
+        return last_id
+
+
     def finish(self):
         [fh.flush for fh in self.logfiles.values() if not fh.closed]
 

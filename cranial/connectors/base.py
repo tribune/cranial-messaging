@@ -6,6 +6,7 @@ from concurrent.futures import Future, ThreadPoolExecutor
 
 from cranial.parsers import line
 
+#todo implement parsers or better have indepth discussion on the need for parsers
 
 class Connector():
     def __init__(self, base_address='', binary=True, do_read=False):

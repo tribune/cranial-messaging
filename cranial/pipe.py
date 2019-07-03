@@ -70,6 +70,8 @@ from cranial.messaging.base import Message, Notifier
 import cranial.common.config as config
 import cranial.common.logger as logger
 from cranial.common.utils import dieIf, warnIf
+from cranial.connectors import FileConnector
+
 
 logging = logger.get()
 
