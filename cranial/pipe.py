@@ -70,7 +70,6 @@ from cranial.messaging.base import Message, Notifier
 import cranial.common.config as config
 import cranial.common.logger as logger
 from cranial.common.utils import dieIf, warnIf
-from cranial.connectors import FileConnector
 
 
 logging = logger.get()
@@ -256,10 +255,20 @@ def cacheable_send(target: Notifier, params: dict, message: Message):
 
 sleep_time = config.get('sleep', 1)
 
+params = config.get('target', {'module': 'stdout'})  # type: Dict
+
 try:
-    last_id = int(config.get('listener', {}).get('last_id', 0))
-except AttributeError:
-    last_id = int(config.get('last_id', 0))
+    sep = params.get('separator') or config.get('separator', '')
+    ntfr = dieIf(
+                "Couldn't build Target",
+                config.factory,
+                {**params, **NOTIFIER_PARAMS})
+    last_id = ntfr.get_last_id(sep=sep, **params)
+except Exception as e:
+    try:
+        last_id = int(config.get('listener', {}).get('last_id', 0))
+    except AttributeError:
+        last_id = int(config.get('last_id', 0))
 
 now = time()
 pipeline = []  # type: List[NotifierTracker]
@@ -271,7 +280,7 @@ for p in config.get('pipeline', []):
     pipeline.append(NotifierTracker(
         None, target_builder(p, uri), 0, now, last_id))
 
-params = config.get('target', {'module': 'stdout'})  # type: Dict
+# params = config.get('target', {'module': 'stdout'})  # type: # Dict
 get_target = target_builder(params, config.get('target_str'))
 pipeline.append(NotifierTracker(None, get_target, 0, now, last_id))
 
@@ -311,7 +320,7 @@ while True:  # noqa
                 nt.last_id = message.dict().get(
                     config.get('key', 'id')) or nt.last_id
             except (TypeError, ValueError) as e:
-                # Message is probably not converatble to a dict.
+                # Message is probably not able to be converted into a dict.
                 if config.get('debug'):
                     print(e)
                 pass
