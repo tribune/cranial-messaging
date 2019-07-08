@@ -21,63 +21,66 @@ The Cranial Ontology is now formalized in OWL.
 Canonical: http://ld.chapmanmedia.com/cranial
 Github: https://github.com/tribune/cranial-messaging/blob/master/ontology/cranial
 
-########
+.. image:: cranial-architecture.svg
+
+
 Modules
-########
+=======
 
 Messaging Module
-====================
+----------------
 
 Installation
-------------
-The PyPI packages are probably out-of-date. Install from Github to be able to
-run examples in this file.
+^^^^^^^^^^^^
+The PyPI packages are possibly out-of-date. Install from Github to be able to
+run latest examples.
 
 
 What is it? A Library...
----------
+^^^^^^^^^^^^^^^^^^^^^^^^
 Modules for reading and writing data from various sources, built
 with a "streaming-first" approach.
 
 What is it? A universal pipe application...
-----------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Provides a utility that listens for messages at some URI and relays them to
 some target. Currently optimized for user convenience and development speed
 over run-time performance.
 
-Try:
-    ``$ cd cranial-messaging/bin/``
+Try::
 
-    ``$ echo "hello world" | ./cranial stdin:// file://./out.txt``
+    $ cd cranial-messaging/bin/
 
-    ``$ ./cranial pipe file://./out.txt stdout://``
+    $ echo "hello world" | ./cranial stdin:// file://./out.txt
 
-    ``$ ./cranial pipe --response --echo file://./out.txt http://httpbin.org/anything``
+    $ ./cranial pipe file://./out.txt stdout://
 
-    ``$ echo "- also means stdin" | ./cranial pipe --response - httppost://httpbin.org/post``
+    $ ./cranial pipe --response --echo file://./out.txt http://httpbin.org/anything
 
-    ``$./cranial pipe kafka://broker.a,broker.b/topic # stdout is the default``
+    $ echo "- also means stdin" | ./cranial pipe --response - httppost://httpbin.org/post
 
-    | ``$ ./cranial pipe postgresql://your.host:5439/name/table?last_id=0 \``
-    | ``>  ssh://you@example.com:22022/file.json.bzip2``
+    $./cranial pipe kafka://broker.a,broker.b/topic # stdout is the default
 
-    | ``$ ./cranial pipe db://your.host/name/table?driver=mysql \``
-    | ``>  hdfs://example.com/path/to/file.json.gz``
+    $ ./cranial pipe postgresql://your.host:5439/name/table?last_id=0 \
+      ssh://you@example.com:22022/file.json.bzip2``
 
-    | ``$ ./cranial pipe tweets://yourname:password@#someTag \``
-    | ``>   fb://yourname:password@ # Doesn't exist yet, but Easy to implement.``
+    $ ./cranial pipe db://your.host/name/table?driver=mysql \
+      hdfs://example.com/path/to/file.json.gz
 
-    | ``$ ./cranial pipe --response out.txt http://httpbin.org/anything \``
-    | ``>  | ./cranial pipe - s3://bucket/piping-to-myself/responses.txt.gz``
+    $ ./cranial pipe tweets://yourname:password@#someTag \
+       fb://yourname:password@ # Doesn't exist yet, but Easy to implement.
 
-    ``$ ./cranial pipe --list  # Get supported protocols``
+    $ ./cranial pipe --response out.txt http://httpbin.org/anything \
+      | ./cranial pipe - s3://bucket/piping-to-myself/responses.txt.gz
 
-    ``$ ./cranial pipe --help``
+    $ ./cranial pipe --list  # Get supported protocols
+
+    $ ./cranial pipe --help
 
 
 
 Distributed Application Tools
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #. "Messengers" (a.k.a Publishers) "Notifiers" (a.k.a. Transports) and
    "Listeners" (a.k.a. Subscribers) for asynchronous remote message passing,
    suitable for implementing Actor & Enterprise Integration Patterns.
@@ -86,7 +89,7 @@ Distributed Application Tools
    a desire to implement peer-to-peer gossip as a default mechanism.
 
 Wrappers & Adapters for common services and protocols
----------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #. HTTP
 #. ZeroMQ
 #. Kafka
@@ -97,14 +100,14 @@ Wrappers & Adapters for common services and protocols
 
 
 Some Candidates for Future Notifier sub-modules?
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Contributions welcome!
 #. Logstash
 #. Redis
 
 
 Datastore Module
-======================
+----------------
 
 Sub-components:
 
@@ -119,5 +122,24 @@ KeyValue: A Dict-like interface to DBAPI2 and other datastores.
 
 Contributing
 ============
+
 Questions, Suggestions, Support requests, trouble reports, and of course,
 Pull Requests, are all welcome in the Github issue queue.
+
+Starting Development
+--------------------
+
+e.g.::
+
+    # Clone the source code in editable form
+    $ git clone git@github.com/tribune/cranial-messaging
+    
+    # Create & activate  a virtual environment wiht the tool of your choice, for example::
+    $ mkdir cranial-dev && cd cranial-dev
+    $ virtualenv -p python3 venv && source venv/bin/activate
+
+    # You may need to install poetry manually:
+    $ pip install poetry
+
+    # ...and then run
+    $ poetry install

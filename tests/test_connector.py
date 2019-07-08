@@ -1,21 +1,23 @@
-import unittest
-import sys
-sys.path.append('.')    # in case file is run from root dir
-
-import io
-import time
 from concurrent.futures import Future
+import io
+import sys
+import time
+import unittest
 
-from cranial.fetchers.connector import Connector
+from cranial.connectors.base import Connector
+
+sys.path.append('.')    # in case file is run from root dir
 
 
 class DummyConnector(Connector):
     def __init__(self):
         pass
+
     def get(self, name=None):
         s = 'some string and name={}'.format(name)
         time.sleep(0.5)
         return io.BytesIO(s.encode())
+
     def put(self, stream, name=None):
         time.sleep(0.5)
         return isinstance(stream, io.BytesIO)
@@ -27,13 +29,18 @@ class TestConnector(unittest.TestCase):
         c = DummyConnector()
         actual = c.get(name='blah').read().decode()
         expected = 'some string and name=blah'
-        self.assertEqual(actual, expected, "should return a pre-defined utf8-encoded string "
-                                           "and name passed into the method")
+        self.assertEqual(
+            actual,
+            expected,
+            "should return a pre-defined utf8-encoded string "
+            "and name passed into the method")
 
     def test_connector_put(self):
         c = DummyConnector()
         actual = c.put(io.BytesIO(b'some string'), name='blah')
-        self.assertTrue(actual, "should return True that input is an instance of io.BytesIO")
+        self.assertTrue(
+            actual,
+            "should return True that input is an instance of io.BytesIO")
 
     def test_toStream(self):
         c = DummyConnector()
@@ -42,7 +49,10 @@ class TestConnector(unittest.TestCase):
             isinstance(c.toStream(b'lala'), io.BytesIO),
         ]
         expected = [True, True]
-        self.assertListEqual(actual, expected, "toStream should convert string into BytesIO and strings int StringIO")
+        self.assertListEqual(
+            actual, expected,
+            "toStream should convert bytes into BytesIO and strings into"
+            "StringIO")
 
     def test_getFuture(self):
         c = DummyConnector()
@@ -57,8 +67,10 @@ class TestConnector(unittest.TestCase):
             time.sleep(0.1)
         actual = f.result().read().decode()
         expected = 'some string and name=blah'
-        self.assertEqual(actual, expected, "final result should be a pre-defined utf8-encoded string "
-                                           "and name passed into the method")
+        self.assertEqual(
+            actual, expected,
+            "final result should be a pre-defined utf8-encoded string "
+            "and name passed into the method")
 
     def test_putFuture(self):
         c = DummyConnector()
@@ -77,19 +89,21 @@ class TestConnector(unittest.TestCase):
     def test_getMultiple_no_block(self):
         c = DummyConnector()
         res = c.getMultiple({'a': 'a', 'b': 'b'}, blocking=False)
-        actual = {k:isinstance(v, Future) for k, v in res.items()}
+        actual = {k: isinstance(v, Future) for k, v in res.items()}
         expected = {'a': True, 'b': True}
-        self.assertDictEqual(actual, expected, "should return a dictionary with futures")
+        self.assertDictEqual(
+            actual, expected, "should return a dictionary with futures")
 
     def test_getMultiple_block(self):
         c = DummyConnector()
         res = c.getMultiple({'a': 'a', 'b': 'b'}, blocking=True)
-        actual = {k:v.read().decode() for k, v in res.items()}
+        actual = {k: v.read().decode() for k, v in res.items()}
         expected = {
             'a': 'some string and name=a',
             'b': 'some string and name=b'
         }
-        self.assertDictEqual(actual, expected, "should return a dictionary with streams")
+        self.assertDictEqual(
+            actual, expected, "should return a dictionary with streams")
 
     def test_putMultiple_no_block(self):
         c = DummyConnector()
@@ -98,9 +112,10 @@ class TestConnector(unittest.TestCase):
             'b': ['some string', 'b']   # << two args
         }, blocking=False)
 
-        actual = {k:isinstance(v, Future) for k, v in res.items()}
+        actual = {k: isinstance(v, Future) for k, v in res.items()}
         expected = {'a': True, 'b': True}
-        self.assertDictEqual(actual, expected, "should return a dictionary with futures")
+        self.assertDictEqual(
+            actual, expected, "should return a dictionary with futures")
 
     def test_putMultiple_block(self):
         c = DummyConnector()
@@ -114,10 +129,9 @@ class TestConnector(unittest.TestCase):
             'a': True,
             'b': False
         }
-        self.assertDictEqual(actual, expected, "should return a dictionary with results")
+        self.assertDictEqual(
+            actual, expected, "should return a dictionary with results")
+
 
 if __name__ == '__main__':
     unittest.main()
-
-
-

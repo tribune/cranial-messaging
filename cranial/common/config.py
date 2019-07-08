@@ -1,10 +1,21 @@
 """
 This module exists to support the 12-factor App approach to configuration,
 while also supporting convenient CLIs. This provides a subset of the
-functionality of the `click` module, so you probably don't need this if you're
+functionality of the `click` module, so you may not need this if you're
 already using click.
 
-CLI options take precendence over Environment Variables.
+You can specify your configurable options in 3 ways, in any combination:
+ - Via environment variables named as 'PREFIX_OPTION_NAME' where prefix is a
+ string you choose to identify the application instance.
+ - Via a YAML format configuration file of key-value pairs.
+ - Via arguments to your main script.
+
+If the same option is specified in more than one place, 
+CLI options take precendence over Config File options which take 
+precendence over Environment Variables.
+
+Further, we push CLI and File-based options into the Environment, so that
+applications and modules which do not use this module can still read them.
 
 We assume, but do not enforce, the use of the `docopt` module to handle
 configuration via command-line arguments. Any dict[str, str] of config values
@@ -16,7 +27,9 @@ Typical usage:
     2. Read and store environment variables, with
       `config.load(opts, 'some_env_var_prefix')`.
     3. Throughout the application, use `config.get()` to get a dict of
-      configuration values.
+      configuration values or `config.get('option_name') to get a specific option value.
+      
+See DocTests in functions below for examples.
 """
 
 from collections import OrderedDict
@@ -116,7 +129,13 @@ def load_from_env(prefix: str) -> ConfigStore:
 
 def load(opts: Dict[str, str], prefix: str, fname=None) -> ConfigStore:
     """
-    >>> o = {}
+    CLI options overrule Config File Options which overrule Env vars.
+    
+    Prefix is not case-sensitive. We support the conventions that
+    Enviroment Variables are typically UPPER_CASE and CLI arguments
+    are typically --lower-case.
+    
+    >>> o = {} 
     >>> o['--foo'] = '0'
     >>> o['--bar'] = 'hello'
     >>> o['--uri'] = 'kafka://host/ok?mode=hot'
