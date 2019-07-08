@@ -17,12 +17,6 @@ def parts_to_path(address: str, endpoint: str) -> str:
     """
     if address in [None, '', 'localhost', '127.0.0.1', '/']:
         endpoint = '/' + endpoint
-    # elif address != '.':
-    #     raise base.NotifyException("""Invalid address.
-    #     If you intend to provide a relative filepath, use: file://./{}
-    #     If you intend to write to another host, the 'file' Notifier does
-    #     not yet support that. Try another protocol.
-    #     """.format(endpoint))
     return 's3://' + address + '/' + endpoint
 
 
