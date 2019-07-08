@@ -59,9 +59,9 @@ class Notifier(base.Notifier):
                 self.logfiles[endpoint] = FileConnector(endpoint)
 
             # todo instead of write use put and pass in path
-            bytes_written = self.logfiles[endpoint].put(
+            success = self.logfiles[endpoint].put(
                 message + '\n'.encode('utf-8'), append=append)
-            if bytes_written is True:
+            if success is True:
                 return message
             else:
                 raise Exception("Couldn't write to destination.")

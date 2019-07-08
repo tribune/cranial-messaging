@@ -3,8 +3,9 @@ import os
 from tempfile import mkstemp
 from concurrent import futures
 from concurrent.futures import Future, ThreadPoolExecutor
+from typing import List, Any
 
-from cranial.parsers import line
+# from cranial.parsers import line
 
 #todo implement parsers or better have indepth discussion on the need for parsers
 
@@ -22,28 +23,28 @@ class Connector():
             f = self.getFuture(target)
             return self.generate(f)
 
-    def generate(self, future_item):
-        for l in line.Parser(f.result()):
-            yield l
-
-    def generate_from_list(self, l: List):
-        # @ToDo
-        #getMultiple on all items, start returning whatever item arrives first.
-        done = set()
-        while len(done) < len(d):
-            for key in d:
-                if not (key in done):
-                    try:
-                        data = response[key].result(1)
-                        for l in line.Parser(data):
-                            yield l
-                        done.add(key)
-                    except futures.TimeoutError:
-                        pass
-                    except futures.CancelledError:
-                        response[key] = False
-                        done.add(key)
-        return response
+    # def generate(self, future_item):
+    #     for l in line.Parser(f.result()):
+    #         yield l
+    #
+    # def generate_from_list(self, l: List):
+    #     # @ToDo
+    #     #getMultiple on all items, start returning whatever item arrives first.
+    #     done = set()
+    #     while len(done) < len(d):
+    #         for key in d:
+    #             if not (key in done):
+    #                 try:
+    #                     data = response[key].result(1)
+    #                     for l in line.Parser(data):
+    #                         yield l
+    #                     done.add(key)
+    #                 except futures.TimeoutError:
+    #                     pass
+    #                 except futures.CancelledError:
+    #                     response[key] = False
+    #                     done.add(key)
+    #     return response
 
 
     def toStream(self, data):

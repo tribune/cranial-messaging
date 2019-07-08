@@ -1,12 +1,9 @@
-from datetime import datetime
 import io
 import os
-from tempfile import mkstemp
 from smart_open import open
-import smart_open
 import boto3
 
-# from cranial.connectors import base
+from cranial.connectors import base
 from cranial.common import logger
 
 log = logger.get(name='local_fetchers')  # streaming log
@@ -38,7 +35,7 @@ def file_readlines(fp, delete_after=False):
             log.warning(e)
 
 
-class Connector(object):
+class Connector(base.Connector):
     def __init__(self, path='', binary=True, do_read=False):
         self.base_address = path
         self.binary = binary
@@ -106,17 +103,17 @@ class Connector(object):
         try:
             if bucket is None:
                 bucket = self.base_address.split('//')[1].split('/')[0]
-                prefix = '/'.join(self.base_address.split('//')[1].split('/')[1:])
+                prefix = self.base_address.split('//')[1].split('/')[1:]
+                if '.' in prefix[-1]:
+                    del prefix[-1]
+                prefix = '/'.join(prefix)
             s3 = boto3.client('s3')
             keys = s3.list_objects_v2(Bucket=bucket, Prefix=prefix)
             return keys['Contents']
         except Exception as e:
-            log.error("{}\tbase_address={}\tparsed_name={}".format(
-                e, self.base_address, p.name))
+            log.error("{}\tbase_address={}\t".format(
+                e, self.base_address))
         return False
-
-    def get_last_id(self):
-        pass
 
     def __del__(self):
         [fh.close() for fh in self._open_files]

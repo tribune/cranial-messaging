@@ -258,12 +258,11 @@ sleep_time = config.get('sleep', 1)
 params = config.get('target', {'module': 'stdout'})  # type: Dict
 
 try:
-    sep = params.get('separator') or config.get('separator', '')
     ntfr = dieIf(
                 "Couldn't build Target",
                 config.factory,
                 {**params, **NOTIFIER_PARAMS})
-    last_id = ntfr.get_last_id(sep=sep, **params)
+    last_id = ntfr.get_last_id(**params)
 except Exception as e:
     try:
         last_id = int(config.get('listener', {}).get('last_id', 0))

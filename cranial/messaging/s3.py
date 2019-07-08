@@ -59,9 +59,9 @@ class Notifier(base.Notifier):
                 self.logfiles[endpoint] = FileConnector(endpoint)
 
             # todo instead of write use put and pass in path
-            bytes_written = self.logfiles[endpoint].put(
+            success = self.logfiles[endpoint].put(
                 message + '\n'.encode('utf-8'), append=append)
-            if bytes_written is True:
+            if success is True:
                 return message
             else:
                 raise Exception("Couldn't write to destination.")
@@ -70,7 +70,7 @@ class Notifier(base.Notifier):
                 "{} || endpoint: {} || message: {}".format(
                     e, endpoint, message))
 
-    def get_last_id(self, adr: str = None, sep: str = None, bucket: str = None,
+    def get_last_id(self,  bucket: str = None,
                     prefix: str = None, **kwargs):
         """ Takes an S3 endpoint and the seperator used in naming files
             gets all the files at the prefix in the given endpoint
@@ -79,39 +79,28 @@ class Notifier(base.Notifier):
             last_id
         """
 
-        if sep is None and kwargs.get('separator', None) is None:
-            raise Exception("Need seperator to parse last_id from file names")
+        if kwargs.get('address', '') is not '':
+            endpoint = 's3://' + kwargs.get('address') + '/' + kwargs.get('endpoint')
+        else:
+            endpoint = kwargs.get('path', '')
 
-        if adr is None:
-            if kwargs.get('address', '') is not '':
-                endpoint = 's3://' + kwargs.get('address') + '/' + kwargs.get('endpoint')
-            else:
-                endpoint = kwargs.get('path', '')
-        print(endpoint)
 
         try:
             keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix)
             sorted_keys = sorted(keys, key=lambda item: item['LastModified'], reverse=True)
-            last_file_key = ''
-            for key in sorted_keys:
-                if key['Key'].split(sep)[-1].split('.')[0].isdigit():
-                    last_file_key = key['Key']
-                    break
-            try:
-                if last_file_key is not '':
-                    adr = 's3://' + endpoint.split('//')[1].split('/')[0] + '/'
-                    last_file = FileConnector(adr + last_file_key).get()
-                    # todo default to json parsing if no parser is provided
-                    last_row = json.loads(last_file.read().split('\n')[-2])
-                    # todo dynmically tell what key id is under or pass it in
-                    last_id = list(last_row.values())[0]
-            except:
-                last_id = last_file_key.split(sep)[-1].split('.')[0]
+
+            adr = 's3://' + endpoint.split('//')[1].split('/')[0] + '/'
+            last_file = FileConnector(adr + sorted_keys[0]['Key']).get()
+            # todo default to json parsing if no parser is provided
+            last_row = json.loads(last_file.read().split('\n')[-2])
+            # todo dynamically tell what key id is under or pass it in
+            last_id = list(last_row.values())[0]
+
         except Exception as e:
             raise base.NotifyException(
-                "{} || endpoint: {} || sep: {}".format(
-                    e, endpoint, sep))
-        print('last_id: ' + last_id)
+                "{} || endpoint: {}".format(
+                    e, endpoint))
+
         return int(last_id)
 
 
