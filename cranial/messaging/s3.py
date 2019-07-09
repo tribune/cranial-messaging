@@ -63,7 +63,7 @@ class Notifier(base.Notifier):
                     e, endpoint, message))
 
     def get_last_id(self,  bucket: str = None,
-                    prefix: str = None, **kwargs):
+                    prefix: str = None, serde=json,**kwargs):
         """ Takes an S3 endpoint and the seperator used in naming files
             gets all the files at the prefix in the given endpoint
             gets the most recently modified file with an id

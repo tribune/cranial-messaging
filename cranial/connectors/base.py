@@ -81,7 +81,7 @@ class Connector():
         return self._doFuture(self.get, *args, **kwargs)
 
     def putFuture(self, *args, **kwargs) -> Future:
-        return self._doFuture(self.put, *args, **kwargs)
+        return self._doFuture(self.put, serde=json, *args, **kwargs)
 
     def _doMultiple(
             self,
