@@ -6,6 +6,8 @@ from cranial.messaging import base
 from cranial.common import logger
 from cranial.connectors import FileConnector
 
+from datetime import datetime, timedelta
+
 log = logger.get()
 
 
@@ -46,13 +48,9 @@ class Notifier(base.Notifier):
                 # make sure the path exists for actual local files.
                 if d != '' and '://' not in endpoint:
                     os.makedirs(d, exist_ok=True)
-                # todo pass to Instantiate File Connector with address and call get
-                #   with endpoint.
-                #   If given a path, break it up into address and endpoint
                 # self.logfiles[endpoint] = open(endpoint, 'ab' if append else 'wb')
                 self.logfiles[endpoint] = FileConnector(endpoint)
 
-            # todo instead of write use put and pass in path
             success = self.logfiles[endpoint].put(
                 message + '\n'.encode('utf-8'), append=append)
             if success is True:
@@ -73,14 +71,24 @@ class Notifier(base.Notifier):
             last_id
         """
 
+        date_format = kwargs.get('date_format', '%Y/%m/%d')
+
         if kwargs.get('address', '') is not '':
             endpoint = 's3://' + kwargs.get('address') + '/' + kwargs.get('endpoint')
         else:
             endpoint = kwargs.get('path', '')
 
-
         try:
-            keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix)
+            try:
+                date_path = datetime.now().strftime(date_format)
+                keys = FileConnector(endpoint + '/' + date_path).get_dir_keys(bucket=bucket, prefix=prefix)
+            except Exception:
+                try:
+                    prev_date_path = (datetime.now() - timedelta(days=1)).strftime(date_format)
+                    keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix + '/' + prev_date_path)
+                except Exception:
+                    keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix)
+
             sorted_keys = sorted(keys, key=lambda item: item['LastModified'], reverse=True)
 
             adr = 's3://' + endpoint.split('//')[1].split('/')[0] + '/'

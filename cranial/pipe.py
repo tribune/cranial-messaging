@@ -71,7 +71,6 @@ import cranial.common.config as config
 import cranial.common.logger as logger
 from cranial.common.utils import dieIf, warnIf
 
-
 logging = logger.get()
 
 opts = docopt(__doc__)
@@ -225,7 +224,7 @@ def cacheable_send(target: Notifier, params: dict, message: Message):
         logging.debug('CACHE MISS EXCEPTION: %s', e)
         return target.send(**params)
 
-      
+
 def main():
     sleep_time = config.get('sleep', 1)
 
@@ -260,9 +259,9 @@ def main():
 
     try:
         ntfr = dieIf(
-                    "Couldn't build Target",
-                    config.factory,
-                    {**params, **NOTIFIER_PARAMS})
+            "Couldn't build Target",
+            config.factory,
+            {**params, **NOTIFIER_PARAMS})
         last_id = ntfr.get_last_id(**params)
     except Exception as e:
         try:
@@ -280,7 +279,6 @@ def main():
         pipeline.append(NotifierTracker(
             None, target_builder(p, uri), 0, now, last_id))
 
-#     params = config.get('target', {'module': 'stdout'})  # type: Dict
     get_target = target_builder(params, config.get('target_str'))
     pipeline.append(NotifierTracker(None, get_target, 0, now, last_id))
 

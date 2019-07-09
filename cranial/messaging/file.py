@@ -52,13 +52,9 @@ class Notifier(base.Notifier):
                 # make sure the path exists for actual local files.
                 if d != '' and '://' not in endpoint:
                     os.makedirs(d, exist_ok=True)
-                # todo pass to Instantiate File Connector with address and call get
-                #   with endpoint.
-                #   If given a path, break it up into address and endpoint
                 # self.logfiles[endpoint] = open(endpoint, 'ab' if append else 'wb')
                 self.logfiles[endpoint] = FileConnector(endpoint)
 
-            # todo instead of write use put and pass in path
             success = self.logfiles[endpoint].put(
                 message + '\n'.encode('utf-8'), append=append)
             if success is True:
@@ -84,7 +80,6 @@ class Notifier(base.Notifier):
         else:
             endpoint = kwargs.get('path', '')
 
-
         try:
             keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix)
             sorted_keys = sorted(keys, key=lambda item: item['LastModified'], reverse=True)
@@ -103,9 +98,8 @@ class Notifier(base.Notifier):
 
         return int(last_id)
 
-
     def finish(self):
-        [fh.flush() for fh in self.logfiles.values() if not fh.closed]
+        [fh.flush for fh in self.logfiles.values() if not fh.closed]
 
     def __del__(self):
         for _, fh in self.logfiles.items():

@@ -100,6 +100,7 @@ class Connector(base.Connector):
 
     # returns a bucket which contains the keys of all files in directory of base_address
     def get_dir_keys(self, bucket: str = None, prefix: str = None):
+        print('base_address: ' + self.base_address + 'prefix: ' + prefix)
         try:
             if bucket is None:
                 bucket = self.base_address.split('//')[1].split('/')[0]
@@ -114,9 +115,11 @@ class Connector(base.Connector):
             log.error("{}\tbase_address={}\t".format(
                 e, self.base_address))
         return False
-
     def __del__(self):
         [fh.close() for fh in self._open_files]
+
+    def close(self):
+        self.__del__()
 
 
 if __name__ == "__main__":

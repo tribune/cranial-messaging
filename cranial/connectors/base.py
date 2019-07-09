@@ -3,7 +3,6 @@ from concurrent.futures import Future, ThreadPoolExecutor
 import io
 import os
 from tempfile import mkstemp
-# from cranial.parsers import line
 from typing import Any, Callable, Dict, Iterator, List, Set, Union  # noqa
 
 SomeIO = Union[io.StringIO, io.BytesIO]
@@ -25,7 +24,6 @@ class Connector():
         else:
             f = self.getFuture(target)
             return self.generate(f)
-
 
     def generate(self, future_item: Future):
         for l in future_item.result():
