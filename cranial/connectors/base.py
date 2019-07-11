@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, Iterator, List, Set, Union  # noqa
 
 SomeIO = Union[io.StringIO, io.BytesIO]
 
-#todo implement parsers or better have indepth discussion on the need for parsers
 
 class Connector():
     def __init__(self, base_address='', binary=True, do_read=False):
@@ -81,7 +80,7 @@ class Connector():
         return self._doFuture(self.get, *args, **kwargs)
 
     def putFuture(self, *args, **kwargs) -> Future:
-        return self._doFuture(self.put, serde=json, *args, **kwargs)
+        return self._doFuture(self.put, *args, **kwargs)
 
     def _doMultiple(
             self,
