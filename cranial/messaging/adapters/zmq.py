@@ -10,6 +10,7 @@ from time import time
 import zmq
 
 from cranial.common import logger
+from cranial.listeners.zmq import Listener
 
 log = logger.get('ZMQ_LOGLEVEL')
 default_context = zmq.Context.instance()
