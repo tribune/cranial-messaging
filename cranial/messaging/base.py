@@ -40,6 +40,9 @@ class Serde(metaclass=ABCMeta):
 class Message():
     """Stores message in it's native form and lazy-converts to required forms
     with minimal copying.
+
+    Beware this can be 2-5x slower than directly converting a single
+    message, so use this only when the message is passing through multiple processors that don't know it's type. 
     """
     raw: Any
     b: Optional[bytes] = None
