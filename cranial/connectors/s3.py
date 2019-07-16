@@ -1,3 +1,5 @@
+# Warning! This module is deprecated. The file module is recommended.
+
 import io
 import logging
 import os

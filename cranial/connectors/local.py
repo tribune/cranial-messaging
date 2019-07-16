@@ -3,6 +3,7 @@ import io
 import os
 from tempfile import mkstemp
 from typing import List, IO  # noqa
+from smart_open import open
 
 from cranial.connectors import base
 from cranial.common import logger

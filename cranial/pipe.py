@@ -150,7 +150,7 @@ def target_builder(params: Dict,
     extfmt = '{}' + sep + '{}' + (params.get('ext') or config.get('ext', ''))
 
     try:
-        config.factory({**params, **NOTIFIER_PARAMS})
+        config.factory({ **NOTIFIER_PARAMS, **params})
     except ModuleNotFoundError:
         # Try unknown protocols through smart_open.
         params['module'] = 'file'
@@ -177,7 +177,7 @@ def target_builder(params: Dict,
             target = dieIf(
                 "Couldn't build Target",
                 config.factory,
-                {**params, **NOTIFIER_PARAMS})
+                { **NOTIFIER_PARAMS, **params})
 
             return target, params, 0, time()
         else:
@@ -261,7 +261,7 @@ def main():
         ntfr = dieIf(
             "Couldn't build Target",
             config.factory,
-            {**params, **NOTIFIER_PARAMS})
+            { **NOTIFIER_PARAMS, **params})
         last_id = ntfr.get_last_id(**params)
     except Exception as e:
         try:

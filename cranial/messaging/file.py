@@ -52,7 +52,6 @@ class Notifier(base.Notifier):
                 # make sure the path exists for actual local files.
                 if d != '' and '://' not in endpoint:
                     os.makedirs(d, exist_ok=True)
-                # self.logfiles[endpoint] = open(endpoint, 'ab' if append else 'wb')
                 self.logfiles[endpoint] = FileConnector(endpoint)
 
             success = self.logfiles[endpoint].put(
@@ -66,29 +65,16 @@ class Notifier(base.Notifier):
                 "{} || endpoint: {} || message: {}".format(
                     e, endpoint, message))
 
-    def get_last_id(self,  bucket: str = None,
-                    prefix: str = None, serde=json, **kwargs):
-        """ Takes an S3 endpoint and the seperator used in naming files
-            gets all the files at the prefix in the given endpoint
-            gets the most recently modified file with an id
-            reads the last row from that file and returns that id as the
-            last_id
-        """
-
-        if kwargs.get('address', '') is not '':
-            endpoint = 's3://' + kwargs.get('address') + '/' + kwargs.get('endpoint')
-        else:
-            endpoint = kwargs.get('path', '')
-
+    # todo test this function
+    def get_last_id(self, address=None, endpoint=None, serde=json, **kwargs):
         try:
-            keys = FileConnector(endpoint).get_dir_keys(bucket=bucket, prefix=prefix)
-            sorted_keys = sorted(keys, key=lambda item: item['LastModified'], reverse=True)
+            endpoint = kwargs.get('path') or parts_to_path(address, endpoint)
+            files = os.listdir(endpoint)
+            paths = [os.path.join(endpoint, basename) for basename in files]
+            last_file = max(paths, key=os.path.getctime)
 
-            adr = 's3://' + endpoint.split('//')[1].split('/')[0] + '/'
-            last_file = FileConnector(adr + sorted_keys[0]['Key']).get()
-            # todo default to json parsing if no parser is provided
-            last_row = json.loads(last_file.read().split('\n')[-2])
-            # todo dynamically tell what key id is under or pass it in
+            last_row = serde.loads(FileConnector(last_file).get().split('\n')[-2])
+
             last_id = list(last_row.values())[0]
 
         except Exception as e:

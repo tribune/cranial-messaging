@@ -36,11 +36,13 @@ def file_readlines(fp, delete_after=False):
 
 
 class Connector(base.Connector):
-    def __init__(self, path='', binary=True, do_read=False):
+    def __init__(self, path='', binary=True, do_read=False, serde=None):
+        self.serde = serde
         self.base_address = path
         self.binary = binary
         self.do_read = do_read
         self._open_files = []  # type: List[FileHandle]
+        self.closed = False
 
     def get(self, name=None):
         if name is not None and name.startswith('/'):
@@ -70,11 +72,6 @@ class Connector(base.Connector):
     def put(self, source, name: str = None, append=False) -> bool:
 
         filepath = self.base_address if name is None else os.path.join(self.base_address, name)
-        dir_path = os.path.split(filepath)[0]
-
-        # todo check if necessary
-        # if len(dir_path) > 0:
-        #     os.makedirs(dir_path, exist_ok=True)
 
         if isinstance(source, io.IOBase):
             source = source.read()
@@ -87,7 +84,6 @@ class Connector(base.Connector):
         try:
             mode = 'ab' if append else 'wb'
 
-            # first write to  file
             with open(filepath, mode) as f:
                 f.write(source)
 
@@ -115,11 +111,14 @@ class Connector(base.Connector):
             log.error("{}\tbase_address={}\t".format(
                 e, self.base_address))
         return False
+
     def __del__(self):
         [fh.close() for fh in self._open_files]
 
     def close(self):
+        self.closed = True
         self.__del__()
+
 
 
 if __name__ == "__main__":

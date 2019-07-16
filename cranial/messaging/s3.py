@@ -63,13 +63,16 @@ class Notifier(base.Notifier):
                     e, endpoint, message))
 
     def get_last_id(self,  bucket: str = None,
-                    prefix: str = None, serde=json,**kwargs):
+                    prefix: str = None, serde=json, **kwargs):
         """ Takes an S3 endpoint and the seperator used in naming files
             gets all the files at the prefix in the given endpoint
             gets the most recently modified file with an id
             reads the last row from that file and returns that id as the
             last_id
         """
+
+        if not isinstance(serde, base.Serde):
+            raise Exception('Must provide a valid serde')
 
         date_format = kwargs.get('date_format', '%Y/%m/%d')
 
@@ -94,7 +97,7 @@ class Notifier(base.Notifier):
             adr = 's3://' + endpoint.split('//')[1].split('/')[0] + '/'
             last_file = FileConnector(adr + sorted_keys[0]['Key']).get()
             # todo default to json parsing if no parser is provided
-            last_row = json.loads(last_file.read().split('\n')[-2])
+            last_row = serde.loads(last_file.read().split('\n')[-2])
             # todo dynamically tell what key id is under or pass it in
             last_id = list(last_row.values())[0]
 
@@ -104,7 +107,6 @@ class Notifier(base.Notifier):
                     e, endpoint))
 
         return int(last_id)
-
 
     def finish(self):
         [fh.flush for fh in self.logfiles.values() if not fh.closed]
