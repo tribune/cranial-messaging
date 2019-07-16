@@ -32,6 +32,10 @@ def file_readlines(fp):
             break
 
 
+def is_s3(name):
+    return '://' in name and name.startswith('s3')
+
+
 class Connector(base.Connector):
     def __init__(self, path='', binary=True, do_read=False):
         self.base_address = path
@@ -80,7 +84,8 @@ class Connector(base.Connector):
                             'readable buffer, got {}'.format(type(source)))
 
         try:
-            mode = 'ab' if append else 'wb'
+            # s3 doesn't support append.
+            mode = 'ab' if append and not is_s3(filepath) else 'wb'
 
             # first write to  file
             with open(filepath, mode) as f:

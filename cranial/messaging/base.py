@@ -24,6 +24,8 @@ log = logger.get('MESSAGING_LOGLEVEL')
 
 StructClass = recordobject
 
+MessageTypes = Union[Dict, str, bytes]
+
 
 class Serde(metaclass=ABCMeta):
     @classmethod
@@ -131,7 +133,7 @@ class NotifyException(Exception):
 
 
 class Notifier(metaclass=ABCMeta):
-    def __init__(self, **kwargs):
+    def __init__(self, serde=None, **kwargs):
         pass
 
     # Optionally, @staticmethod
