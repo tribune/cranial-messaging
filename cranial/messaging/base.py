@@ -44,7 +44,8 @@ class Message():
     with minimal copying.
 
     Beware this can be 2-5x slower than directly converting a single
-    message, so use this only when the message is passing through multiple processors that don't know it's type. 
+    message, so use this only when the message is passing through multiple
+    processors that don't know it's type.
     """
     raw: Any
     b: Optional[bytes] = None
@@ -133,16 +134,19 @@ class NotifyException(Exception):
 
 
 class Notifier(metaclass=ABCMeta):
-    def __init__(self, serde=None, **kwargs):
-        pass
+    def __init__(self, serde=json, **kwargs):
+        self.serde = serde
 
     # Optionally, @staticmethod
     @abstractmethod
     def send(self,
              address: Optional[str],
-             message: str,
+             message: MessageTypes,
              endpoint: Optional[str],
              **kwargs):
+        """ If message is not already bytes, the Notifier should use
+        self.serde to convert it.
+        """
         return False
 
 

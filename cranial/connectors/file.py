@@ -1,10 +1,12 @@
 from glob import iglob
 import io
 import os
-from typing import List, IO, Iterator  # noqa
+from typing import Any, List, IO, Iterator  # noqa
 
 import boto3
 from smart_open import open
+from toolz import memoize
+import ujson as json
 
 from cranial.connectors import base
 from cranial.common import logger
@@ -76,6 +78,7 @@ class Connector(base.Connector):
                 os.makedirs(dir_path, exist_ok=True)
 
         if isinstance(source, (io.StringIO, io.BytesIO)):
+            # @TODO buffer
             source = source.read()
         elif isinstance(source, (str, bytes)):
             pass
@@ -98,6 +101,14 @@ class Connector(base.Connector):
             log.error("{}\tbase_address={}\tname={}".format(
                 e, self.base_address, name))
             return False
+
+    @memoize
+    def _split_base(self):
+        base_parts = self.base_address.split('//', 1)
+        if len(base_parts) == 1:
+            return 'local', base_parts[0]
+        else:
+            return base_parts[0], base_parts[1]
 
     def list_names(self, prefix: str = '') -> Iterator[str]:
         """
@@ -122,12 +133,7 @@ class Connector(base.Connector):
         ['pre/bar.file', 'pre/foo.file', 'top.file']
         """
         # Returns a List of paths.
-        base_parts = self.base_address.split('//', 1)
-        if len(base_parts) == 1:
-            protocol = 'local'
-            address = base_parts[0]
-        else:
-            protocol, address = base_parts
+        protocol, address = self._split_base()
 
         if protocol.startswith('s3'):
             bucket, path = address.split('/', 1)
@@ -151,7 +157,24 @@ class Connector(base.Connector):
                 name = x.replace(address + os.path.sep, '')
                 yield name
         else:
-            raise Exception('List_names is not implemented for %d.', protocol)
+            raise Exception('list_names is not implemented for %d.', protocol)
+
+    def get_last_id(self, prefix='', id_name='id', serde=json) -> Any:
+        """ Gets the most recently modified file, parses it's last record
+            and returns it's ID.
+            @WIP
+        """
+        protocol, address = self._split_base()
+        if protocol.startswith('s3'):
+            keys = self.get_dir_keys(prefix=prefix)
+            sorted_keys = sorted(
+                keys, key=lambda item: item['LastModified'], reverse=True)
+
+            last_file = self.get(sorted_keys[0])
+
+        # @TODO Read last record from last file
+        last_rec = serde.loads()
+        return last_rec[id_name]
 
     def __del__(self):
         self.close()
