@@ -123,11 +123,13 @@ def key_download_decompress(bucket, key, force_decompress=False):
 
 class S3Connector(base.Connector):
     def __init__(self, bucket: str, prefix='') -> None:
+        """ @deprecated """
         self.bucket = bucket
         self.prefix = prefix
         self.cache = {}  # type: Dict[str, str]
-        log.info('s3.S3Connector downloads whole files to local disk '
-                 + 'before use. Consider s3.InMemoryConnector instead.')
+        log.warn('s3.S3Connector downloads whole files to local disk '
+                 + 'before use. Consider file.Connector instead, which '
+                 + 'supports getting s3://bucket/path URLs.')
 
     def get(self, s3_path, binary=False, redownload=False):
         if not redownload:
@@ -162,9 +164,12 @@ class S3Connector(base.Connector):
 class InMemoryConnector(base.Connector):
     def __init__(self, bucket, prefix='', binary=True, do_read=False,
                  credentials={}):
+        """ @deprecated """
         super(InMemoryConnector, self).__init__(base_address=prefix, binary=binary, do_read=do_read)
         self.credentials = credentials
         self.bucket = bucket
+        log.warn('s3.InMemoryConnector is deprecated in favor of '
+                 + 'file.Connector, which supports s3://bucket/path URLs.')
 
     def get(self, name=None):
         """
