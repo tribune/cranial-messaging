@@ -5,14 +5,21 @@ import os
 from tempfile import mkstemp
 from typing import Any, Callable, Dict, Iterator, List, Set, Union  # noqa
 
+import ujson as json
+
 SomeIO = Union[io.StringIO, io.BytesIO]
 
 
 class Connector():
-    def __init__(self, base_address='', binary=True, do_read=False):
+    def __init__(self,
+                 base_address='',
+                 binary=True,
+                 do_read=False,
+                 executor=ThreadPoolExecutor):
         self.base_address = base_address
         self.binary = binary
         self.do_read = do_read  # @TODO Deprecated!
+        self.poolExecutor = executor
 
     def iterator(self, target: Any) -> Iterator:
         """Get one or more IOstreams and iterate over them yielding serialized
@@ -22,9 +29,9 @@ class Connector():
             return self.generate_from_list(target)
         else:
             f = self.getFuture(target)
-            return self.generate(f)
+            return self._generate(f)
 
-    def generate(self, future_item: Future):
+    def _generate(self, future_item: Future):
         for l in future_item.result():
             yield l
 
@@ -70,7 +77,7 @@ class Connector():
 
     def executor(self):
         if not hasattr(self, 'pool'):
-            self.pool = ThreadPoolExecutor()
+            self.pool = self.poolExecutor()
         return self.pool
 
     def _doFuture(self, fn: Callable, *args, **kwargs) -> Future:

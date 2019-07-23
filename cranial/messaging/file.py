@@ -1,64 +1,44 @@
 import json
-import os
-from typing import Dict, IO  # noqa
+from typing import Any, Dict, IO, Optional  # noqa
 
-from smart_open import open
-
-from cranial.messaging import base
+from cranial.messaging import base, MessageTypes
 from cranial.common import logger
+from cranial.connectors.base import Connector  # noqa - Typing
+from cranial.connectors import FileConnector
 
 log = logger.get()
 
 
-def parts_to_path(address: str, endpoint: str) -> str:
-    """ Provides URI string based configurability, per cranial.common.config
-
-    file:///foo/bar is absolute;
-    file://./foo/bar is relative.
-    """
-    if address in [None, '', 'localhost', '127.0.0.1', '/']:
-        endpoint = '/' + endpoint
-    elif address != '.':
-        raise base.NotifyException("""Invalid address.
-        If you intend to provide a relative filepath, use: file://./{}
-        If you intend to write to another host, the 'file' Notifier does
-        not yet support that. Try another protocol.
-        """.format(endpoint))
-    return endpoint
-
-
 class Notifier(base.Notifier):
-    """ Write messages to a local file named `endpoint`
-
-    Tested in LocalMessenger().
+    """ Write messages to a file named `endpoint`
     """
-    logfiles = {}  # type: Dict[str, IO]
+    files = {}  # type: Dict[str, Connector]
 
-    def send(self, address=None, message='', endpoint=None, serde=json,
+    def send(self,
+             address: str = '',
+             message: MessageTypes = '',
+             endpoint: str = '',
              append=False,
+             path: Optional[str] = None,
              **kwargs):
-        if not ((address and endpoint) or kwargs.get('path')):
+        if not ((address and endpoint) or path):
             raise Exception(
                 'Must provide either path, or address and endpoint.')
-        endpoint = kwargs.get('path') or parts_to_path(address, endpoint)
+        endpoint = path or self.parts_to_path(address, endpoint)
         log.debug('Writing to file: {}'.format(endpoint))
         if type(message) is str:
             message = message.encode('utf-8')
         elif type(message) != bytes:
-            message = serde.dumps(message).encode('utf-8')
-        try:
-            if endpoint not in self.logfiles.keys() \
-                    or self.logfiles[endpoint].closed:
-                d, _ = os.path.split(endpoint)
-                # make sure the path exists for actual local files.
-                if d != '' and '://' not in endpoint:
-                    os.makedirs(d, exist_ok=True)
-                self.logfiles[endpoint] = open(endpoint,
-                                               'ab' if append else 'wb')
+            message = self.serde.dumps(message).encode('utf-8')
 
-            bytes_written = self.logfiles[endpoint].write(
-                message + '\n'.encode('utf-8'))
-            if bytes_written > 0:
+        try:
+            if endpoint not in self.files.keys() \
+                    or self.files[endpoint].closed:
+                self.files[endpoint] = FileConnector(endpoint)
+
+            success = self.files[endpoint].put(
+                message + '\n'.encode('utf-8'), append=append)
+            if success is True:
                 return message
             else:
                 raise Exception("Couldn't write to destination.")
@@ -67,9 +47,18 @@ class Notifier(base.Notifier):
                 "{} || endpoint: {} || message: {}".format(
                     e, endpoint, message))
 
-    def finish(self):
-        [fh.flush() for fh in self.logfiles.values() if not fh.closed]
+    def parts_to_path(self, address: str, endpoint: str) -> str:
+        """ Provides URI-based configurability, per cranial.common.config
 
-    def __del__(self):
-        for _, fh in self.logfiles.items():
-            fh.close()
+        file:///foo/bar is absolute;
+        file://./foo/bar is relative.
+        """
+        if address in [None, '', 'localhost', '127.0.0.1', '/']:
+            endpoint = '/' + endpoint
+        elif address != '.':
+            raise base.NotifyException("""Invalid address.
+            If you intend to provide a relative filepath, use: file://./{}
+            If you intend to write to another host, the 'file' Notifier does
+            not yet support that. Try another protocol.
+            """.format(endpoint))
+        return endpoint

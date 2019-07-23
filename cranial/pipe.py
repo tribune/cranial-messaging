@@ -255,10 +255,19 @@ def main():
                              'module': 'file',
                              'path': listener_str}})
 
+    params = config.get('target', {'module': 'stdout'})  # type: Dict
+
     try:
-        last_id = int(config.get('listener', {}).get('last_id', 0))
-    except AttributeError:
-        last_id = int(config.get('last_id', 0))
+        ntfr = dieIf(
+            "Couldn't build Target",
+            config.factory,
+            {**params, **NOTIFIER_PARAMS})
+        last_id = ntfr.get_last_id(**params)
+    except Exception as e:
+        try:
+            last_id = int(config.get('listener', {}).get('last_id', 0))
+        except AttributeError:
+            last_id = int(config.get('last_id', 0))
 
     now = time()
     pipeline = []  # type: List[NotifierTracker]
@@ -270,7 +279,6 @@ def main():
         pipeline.append(NotifierTracker(
             None, target_builder(p, uri), 0, now, last_id))
 
-    params = config.get('target', {'module': 'stdout'})  # type: Dict
     get_target = target_builder(params, config.get('target_str'))
     pipeline.append(NotifierTracker(None, get_target, 0, now, last_id))
 
