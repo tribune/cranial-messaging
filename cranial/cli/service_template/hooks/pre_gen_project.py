@@ -1,12 +1,11 @@
+import os
 import sys
-import importlib
 
-# Todo check if function exists
-
-module= '{{ cookiecutter.module }}'
+p = os.path.abspath('..')
+sys.path.append(p)
 
 try:
-    mod = importlib.import_module(module)
+    import {{ cookiecutter.module }}
 except Exception as e:
-    print('Could not import module.', 'Error: ', e)
+    print('Could not find module. Is module in the current directory?', 'Error: ', e)
     sys.exit(1)
