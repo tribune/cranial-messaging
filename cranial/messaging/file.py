@@ -6,6 +6,8 @@ from smart_open import open
 
 from cranial.messaging import base
 from cranial.common import logger
+from cranial.connectors import FileConnector
+# from cranial.connectors import file
 
 log = logger.get()
 
@@ -53,12 +55,16 @@ class Notifier(base.Notifier):
                 # make sure the path exists for actual local files.
                 if d != '' and '://' not in endpoint:
                     os.makedirs(d, exist_ok=True)
-                self.logfiles[endpoint] = open(endpoint,
-                                               'ab' if append else 'wb')
+                # todo pass to Instantiate File Connector with address and call get
+                #   with endpoint.
+                #   If given a path, break it up into address and endpoint
+                # self.logfiles[endpoint] = open(endpoint, 'ab' if append else 'wb')
+                self.logfiles[endpoint] = FileConnector(endpoint)
 
-            bytes_written = self.logfiles[endpoint].write(
-                message + '\n'.encode('utf-8'))
-            if bytes_written > 0:
+            # todo instead of write use put and pass in path
+            bytes_written = self.logfiles[endpoint].put(
+                message + '\n'.encode('utf-8'), append=append)
+            if bytes_written is True:
                 return message
             else:
                 raise Exception("Couldn't write to destination.")

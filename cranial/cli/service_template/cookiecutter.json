@@ -1,0 +1,7 @@
+{
+    "project_name": "my_project",
+    "listner": ["zmq","file","stdin","postgresql","kafka","db"],
+    "serde": "json",
+    "module": "",
+    "function": ""
+}
