@@ -113,7 +113,7 @@ def get_cursor(credentials_file='~/.pgpass', **kwargs):
                                          c['user'], c['password'])
 
 
-def query(q: str, credentials_file='.pgpass'):
+def query(q: str, credentials_file='~/.pgpass', **kwargs):
     '''
     Execute a query in redshift/postgres.
 
@@ -128,7 +128,7 @@ def query(q: str, credentials_file='.pgpass'):
         query results
 
     '''
-    with get_cursor(credentials_file=credentials_file) as cur:
+    with get_cursor(credentials_file=credentials_file, **kwargs) as cur:
         # execute
         cur.execute(q)
 
