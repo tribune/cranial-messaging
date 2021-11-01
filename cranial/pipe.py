@@ -319,7 +319,7 @@ def main():
                 elif response:
                     message = Message(response)
 
-            if config.get('update') and config.get('response'):
+            if config.get('response'):
                 print(message.str())
 
             # End sending.
